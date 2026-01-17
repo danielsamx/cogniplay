@@ -145,25 +145,6 @@
           </div>
         </div>
 
-        <div
-          class="flex flex-col items-center flex-grow sm:flex-none"
-          role="timer"
-          aria-live="polite"
-        >
-          <div
-            class="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1 bg-white rounded-full shadow-sm border border-slate-100"
-          >
-            <span class="animate-pulse text-sm sm:text-base" aria-hidden="true"
-              >⏱️</span
-            >
-            <span
-              id="timer-text"
-              class="font-mono font-bold text-sm sm:text-lg text-slate-700"
-              >00:00</span
-            >
-          </div>
-        </div>
-
         <div class="flex gap-1 sm:gap-2">
           <div
             class="flex bg-slate-100 p-1 rounded-xl sm:rounded-2xl shadow-inner"
@@ -202,6 +183,24 @@
     </nav>
 
     <main class="w-full flex-grow flex flex-col items-center px-1 sm:px-4">
+      <div
+        class="flex flex-col items-center flex-grow sm:flex-none mb-4"
+        role="timer"
+        aria-live="polite"
+      >
+        <div
+          class="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1 bg-white rounded-full shadow-sm border border-slate-100"
+        >
+          <span class="animate-pulse text-sm sm:text-base" aria-hidden="true"
+            >⏱️</span
+          >
+          <span
+            id="timer-text"
+            class="font-mono font-bold text-sm sm:text-lg text-slate-700"
+            >00:00</span
+          >
+        </div>
+      </div>
       <div class="w-full max-w-md mb-4 sm:mb-6">
         <div
           class="w-full bg-slate-200 h-2 sm:h-3 rounded-full overflow-hidden shadow-inner"
@@ -650,7 +649,7 @@
               <p class="font-black text-[10px] mb-2 text-purple-500 uppercase">Temática</p>
               <div class="flex gap-2" role="radiogroup">
                 <button onclick="setCategory('animales', this)" class="btn-category glass flex-1 py-2 rounded-xl font-bold btn-active text-sm" data-tooltip="Naturaleza">Animales</button>
-                <button onclick="setCategory('transportes', this)" class="btn-category glass flex-1 py-2 rounded-xl font-bold text-sm" data-tooltip="Aventuras">Viajes</button>
+                <button onclick="setCategory('transportes', this)" class="btn-category glass flex-1 py-2 rounded-xl font-bold text-sm" data-tooltip="Aventuras">Transportes</button>
                 <button onclick="setCategory('mixto', this)" class="btn-category glass flex-1 py-2 rounded-xl font-bold text-sm" data-tooltip="Todo junto">Mixto</button>
               </div>
             </div>
