@@ -38,6 +38,14 @@
       .backface-hidden {
         backface-visibility: hidden;
       }
+
+      /* Optimización de Imágenes */
+      .card img {
+        image-rendering: -webkit-optimize-contrast;
+        object-fit: cover;
+        background: #f1f5f9; /* Color de respaldo mientras carga */
+      }
+
       .glass {
         background: rgba(255, 255, 255, 0.7);
         backdrop-filter: blur(12px);
@@ -48,7 +56,6 @@
         background: #9333ea !important;
         color: white !important;
         transform: scale(1.05);
-        border-color: rgba(255, 255, 255, 0.5);
       }
       .modal-animate {
         animation: zoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -66,35 +73,6 @@
       .paused-cards .card-inner {
         filter: blur(10px) grayscale(1);
         pointer-events: none;
-      }
-      [data-tooltip] {
-        position: relative;
-        cursor: pointer;
-      }
-      [data-tooltip]:before {
-        content: attr(data-tooltip);
-        position: absolute;
-        bottom: -35px;
-        left: 50%;
-        transform: translateX(-50%) scale(0);
-        background: #1e293b;
-        color: white;
-        padding: 4px 10px;
-        border-radius: 8px;
-        font-size: 12px;
-        white-space: nowrap;
-        transition: all 0.2s ease;
-        opacity: 0;
-        z-index: 100;
-      }
-      [data-tooltip]:hover:before {
-        transform: translateX(-50%) scale(1);
-        opacity: 1;
-      }
-      .nav-glass {
-        background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(15px);
-        border-bottom: 2px solid rgba(255, 255, 255, 0.5);
       }
     </style>
   </head>
@@ -117,13 +95,11 @@
           <div class="flex gap-1 bg-slate-100 p-1 rounded-xl">
             <a
               href="explorar.html"
-              data-tooltip="Ir al Menú"
               class="p-1.5 sm:p-2 hover:bg-white rounded-lg transition-all"
               >🏠</a
             >
             <button
               onclick="togglePause()"
-              data-tooltip="Pausar Juego"
               class="p-1.5 sm:p-2 hover:bg-white rounded-lg transition-all"
             >
               ⏸️
@@ -149,7 +125,7 @@
             class="flex bg-slate-100 p-1 rounded-xl sm:rounded-2xl shadow-inner"
           >
             <div
-              class="px-2 sm:px-4 py-1 rounded-lg sm:rounded-xl bg-white shadow-sm flex flex-col items-center min-w-[50px] sm:min-w-[70px]"
+              class="px-2 sm:px-4 py-1 rounded-lg sm:rounded-xl bg-white shadow-sm flex flex-col items-center min-w-[50px]"
             >
               <span
                 class="text-[7px] sm:text-[9px] uppercase font-black text-purple-500"
@@ -162,7 +138,7 @@
               >
             </div>
             <div
-              class="px-2 sm:px-4 py-1 rounded-lg sm:rounded-xl flex flex-col items-center min-w-[50px] sm:min-w-[70px]"
+              class="px-2 sm:px-4 py-1 rounded-lg sm:rounded-xl flex flex-col items-center min-w-[50px]"
             >
               <span
                 class="text-[7px] sm:text-[9px] uppercase font-black text-yellow-500"
@@ -204,7 +180,7 @@
     >
       <div
         id="modal-content"
-        class="glass p-6 sm:p-8 rounded-[2rem] sm:rounded-[3rem] shadow-2xl max-w-sm w-full text-center modal-animate border-4 border-white"
+        class="glass p-6 sm:p-8 rounded-[2rem] shadow-2xl max-w-sm w-full text-center modal-animate border-4 border-white"
       >
         <h2
           id="modal-title"
@@ -212,17 +188,17 @@
         ></h2>
         <div
           id="modal-body"
-          class="text-slate-600 font-medium mb-6 sm:mb-8 text-sm sm:text-base"
+          class="text-slate-600 font-medium mb-6 text-sm sm:text-base"
         ></div>
         <div class="flex flex-col gap-3">
           <button
             id="modal-btn-primary"
-            class="w-full bg-purple-600 hover:bg-purple-700 text-white font-black py-3 sm:py-4 rounded-2xl shadow-lg transition-transform active:scale-95 text-lg sm:text-xl"
+            class="w-full bg-purple-600 hover:bg-purple-700 text-white font-black py-3 rounded-2xl shadow-lg transition-transform active:scale-95 text-lg"
           ></button>
           <a
             href="explorar.html"
             id="modal-btn-secondary"
-            class="w-full bg-white/50 hover:bg-white text-slate-600 font-bold py-2 sm:py-3 rounded-2xl transition-colors hidden text-base sm:text-lg"
+            class="w-full bg-white/50 hover:bg-white text-slate-600 font-bold py-2 rounded-2xl transition-colors hidden text-base"
             >Salir</a
           >
         </div>
@@ -231,7 +207,7 @@
 
     <button
       id="music-toggle"
-      class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-12 h-12 sm:w-14 sm:h-14 glass rounded-full shadow-2xl flex items-center justify-center text-xl sm:text-2xl z-40"
+      class="fixed bottom-4 right-4 w-12 h-12 glass rounded-full shadow-2xl flex items-center justify-center text-xl z-40"
     >
       🔇
     </button>
@@ -252,14 +228,13 @@
       let category = "animales";
       let level = 1;
       let score = 0;
-      let timeLeft;
-      let timerInterval;
-      let flippedCards = [];
-      let canFlip = false;
-      let matchedPairs = 0;
-      let isPaused = false;
-      let isMusicPlaying = false;
-      let isAlertActive = false;
+      let timeLeft, timerInterval;
+      let flippedCards = [],
+        matchedPairs = 0;
+      let canFlip = false,
+        isPaused = false,
+        isMusicPlaying = false,
+        isAlertActive = false;
 
       const grid = document.getElementById("game-grid");
       const levelDisplay = document.getElementById("level-display");
@@ -335,6 +310,21 @@
         "vaca",
       ];
 
+      // --- OPTIMIZACIÓN: PRECARGA DE IMÁGENES ---
+      function preloadImages(cat) {
+        const pool =
+          cat === "animales"
+            ? animales
+            : cat === "transportes"
+              ? transportes
+              : [...animales, ...transportes];
+        pool.forEach((val) => {
+          const img = new Image();
+          const folder = transportes.includes(val) ? "transportes" : "animales";
+          img.src = `../images/${folder}/${val}.png`;
+        });
+      }
+
       function setDifficulty(val, el) {
         difficulty = val;
         document
@@ -349,6 +339,7 @@
           .querySelectorAll(".btn-category")
           .forEach((b) => b.classList.remove("btn-active"));
         el.classList.add("btn-active");
+        preloadImages(val); // Precarga al cambiar temática
       }
 
       musicBtn.onclick = () => {
@@ -368,8 +359,9 @@
         sndAlert.currentTime = 0;
         bgMusic.volume = 1.0;
         isAlertActive = false;
-        const timerText = document.getElementById("timer-text");
-        timerText.classList.remove("text-red-500", "animate-bounce");
+        document
+          .getElementById("timer-text")
+          .classList.remove("text-red-500", "animate-bounce");
         timerProgress.classList.remove("bg-red-500");
       }
 
@@ -399,7 +391,6 @@
         canFlip = false;
         stopAlert();
 
-        // Reanudar música al iniciar/reintentar si estaba activa
         if (isMusicPlaying) bgMusic.play();
 
         let basePairs =
@@ -429,18 +420,18 @@
 
         cardValues.forEach((val) => {
           const card = document.createElement("div");
-          // Tamaños responsivos adaptados a la cantidad de cartas
           const sizeClass =
             numPairs > 8
               ? "w-16 h-24 sm:w-24 sm:h-32"
               : "w-20 h-28 sm:w-28 sm:h-36";
           card.className = `card ${sizeClass} cursor-pointer perspective-1000`;
           const folder = transportes.includes(val) ? "transportes" : "animales";
+
           card.innerHTML = `
             <div class="card-inner shadow-lg rounded-xl sm:rounded-2xl">
               <div class="backface-hidden absolute inset-0 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl sm:rounded-2xl flex items-center justify-center text-2xl sm:text-4xl border-2 sm:border-4 border-white shadow-inner text-white">?</div>
               <div class="backface-hidden absolute inset-0 bg-white rounded-xl sm:rounded-2xl flex items-center justify-center [transform:rotateY(180deg)] border-2 border-purple-400 overflow-hidden">
-                <img src="../images/${folder}/${val}.png" alt="${val}" class="w-full h-full object-cover">
+                <img src="../images/${folder}/${val}.png" alt="${val}" loading="eager" class="w-full h-full object-cover">
               </div>
             </div>`;
           card.dataset.value = val;
@@ -448,6 +439,7 @@
           grid.appendChild(card);
         });
 
+        // Breve pausa para asegurar renderizado de imágenes antes de mostrar
         setTimeout(() => {
           document
             .querySelectorAll(".card")
@@ -460,24 +452,23 @@
               canFlip = true;
               startTimer();
             },
-            Math.max(1000, 2000 - level * 100),
+            Math.max(1200, 2200 - level * 100),
           );
-        }, 500);
+        }, 300);
       }
 
       function startTimer(resume = false) {
         clearInterval(timerInterval);
         const timerText = document.getElementById("timer-text");
-        let calculatedTime = 10 + (level - 1) * 2.5;
-        let totalTime = Math.min(calculatedTime, 35);
+        let totalTime = Math.min(10 + (level - 1) * 2.5, 35);
         if (!resume) timeLeft = totalTime;
 
         timerInterval = setInterval(() => {
           if (!isPaused) {
             timeLeft--;
-            const minutes = Math.floor(timeLeft / 60);
-            const seconds = timeLeft % 60;
-            timerText.innerText = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            timerText.innerText = `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
             timerProgress.style.width = (timeLeft / totalTime) * 100 + "%";
 
             if (timeLeft <= 5 && timeLeft > 0) {
@@ -488,10 +479,7 @@
                 bgMusic.volume = 0.4;
                 isAlertActive = true;
               }
-            } else if (timeLeft > 5) {
-              stopAlert();
             }
-
             if (timeLeft <= 0) {
               stopAlert();
               gameOver();
@@ -543,16 +531,11 @@
         clearInterval(timerInterval);
         stopAlert();
         playSnd("snd-win");
-        confetti({
-          particleCount: 150,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ["#8b5cf6", "#ec4899", "#22c55e"],
-        });
+        confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
         showModal(
           level === 10 ? "🏆 ¡VICTORIA!" : `¡NIVEL ${level} LISTO!`,
           level === 10
-            ? `¡Completaste el reto! Puntos: ${score}`
+            ? `¡Fin del reto! Puntos: ${score}`
             : "Tu memoria es excelente.",
           level === 10 ? "REPETIR" : "SIGUIENTE",
           () => {
@@ -569,7 +552,7 @@
       function gameOver() {
         clearInterval(timerInterval);
         stopAlert();
-        bgMusic.pause(); // Se pausa al perder
+        bgMusic.pause();
         playSnd("snd-gameover");
         showModal(
           "TIEMPO FUERA",
@@ -584,7 +567,7 @@
         level = 1;
         score = 0;
         updateUI();
-        initGame(); // Aquí ya está integrada la lógica de bgMusic.play()
+        initGame();
       }
 
       function updateUI() {
@@ -616,9 +599,11 @@
       }
 
       window.onload = () => {
+        preloadImages("animales");
         showModal(
           "COGNIPLAY",
-          `<div class="text-left space-y-4">
+          `
+          <div class="text-left space-y-4">
             <div>
               <p class="font-black text-[10px] mb-2 text-purple-500 uppercase">Dificultad</p>
               <div class="flex gap-2">
