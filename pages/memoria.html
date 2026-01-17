@@ -2,7 +2,10 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <title>Reto de Memoria | CogniPlay</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -17,7 +20,7 @@
         min-height: 100vh;
         display: flex;
         flex-direction: column;
-        overflow: hidden;
+        overflow-x: hidden;
       }
       .perspective-1000 {
         perspective: 1000px;
@@ -35,21 +38,18 @@
       .backface-hidden {
         backface-visibility: hidden;
       }
-
       .glass {
         background: rgba(255, 255, 255, 0.7);
         backdrop-filter: blur(12px);
         border: 1px solid rgba(255, 255, 255, 0.4);
         transition: all 0.2s ease;
       }
-
       .btn-active {
         background: #9333ea !important;
         color: white !important;
         transform: scale(1.05);
         border-color: rgba(255, 255, 255, 0.5);
       }
-
       .modal-animate {
         animation: zoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
       }
@@ -63,13 +63,10 @@
           transform: scale(1);
         }
       }
-
       .paused-cards .card-inner {
         filter: blur(10px) grayscale(1);
         pointer-events: none;
       }
-
-      /* Tooltip animado */
       [data-tooltip] {
         position: relative;
         cursor: pointer;
@@ -94,8 +91,6 @@
         transform: translateX(-50%) scale(1);
         opacity: 1;
       }
-
-      /* Efecto de cristal para el Navbar */
       .nav-glass {
         background: rgba(255, 255, 255, 0.8);
         backdrop-filter: blur(15px);
@@ -103,76 +98,79 @@
       }
     </style>
   </head>
-  <body class="p-4 font-sans text-slate-800">
-    <nav class="sticky top-0 z-40 w-full py-3 mb-8 px-4">
-      <div class="max-w-5xl mx-auto flex items-center justify-between">
-        <div class="flex items-center gap-4">
+  <body class="p-2 sm:p-4 font-sans text-slate-800">
+    <nav class="sticky top-0 z-40 w-full py-2 mb-4 sm:mb-8 px-2">
+      <div class="max-w-5xl mx-auto flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 sm:gap-4">
           <div class="flex items-center gap-2 group cursor-default">
             <div
-              class="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center shadow-lg transform group-hover:rotate-12 transition-transform"
+              class="w-8 h-8 sm:w-10 sm:h-10 bg-purple-600 rounded-xl flex items-center justify-center shadow-lg transform group-hover:rotate-12 transition-transform"
             >
-              <span class="text-white font-black text-xl">C</span>
+              <span class="text-white font-black text-lg sm:text-xl">C</span>
             </div>
-            <span class="text-xl font-black tracking-tight hidden sm:block">
-              Cogni<span class="text-purple-600">Play</span>
-            </span>
+            <span
+              class="text-lg sm:text-xl font-black tracking-tight hidden xs:block"
+              >Cogni<span class="text-purple-600">Play</span></span
+            >
           </div>
-
-          <div class="h-8 w-[1px] bg-slate-200 mx-2"></div>
-
+          <div class="h-6 sm:h-8 w-[1px] bg-slate-200 mx-1"></div>
           <div class="flex gap-1 bg-slate-100 p-1 rounded-xl">
             <a
               href="explorar.html"
               data-tooltip="Ir al Menú"
-              class="p-2 hover:bg-white rounded-lg transition-all"
+              class="p-1.5 sm:p-2 hover:bg-white rounded-lg transition-all"
               >🏠</a
             >
             <button
               onclick="togglePause()"
               data-tooltip="Pausar Juego"
-              class="p-2 hover:bg-white rounded-lg transition-all"
+              class="p-1.5 sm:p-2 hover:bg-white rounded-lg transition-all"
             >
               ⏸️
             </button>
           </div>
         </div>
 
-        <div
-          class="absolute left-1/2 -translate-x-1/2 flex flex-col items-center"
-        >
+        <div class="flex flex-col items-center flex-grow sm:flex-none">
           <div
-            class="flex items-center gap-2 px-4 py-1 bg-white rounded-full shadow-sm border border-slate-100"
+            class="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1 bg-white rounded-full shadow-sm border border-slate-100"
           >
-            <span class="animate-pulse">⏱️</span>
+            <span class="animate-pulse text-sm sm:text-base">⏱️</span>
             <span
               id="timer-text"
-              class="font-mono font-bold text-lg text-slate-700"
+              class="font-mono font-bold text-sm sm:text-lg text-slate-700"
               >00:00</span
             >
           </div>
         </div>
 
-        <div class="flex gap-2">
-          <div class="flex bg-slate-100 p-1 rounded-2xl shadow-inner">
+        <div class="flex gap-1 sm:gap-2">
+          <div
+            class="flex bg-slate-100 p-1 rounded-xl sm:rounded-2xl shadow-inner"
+          >
             <div
-              class="px-4 py-1 rounded-xl bg-white shadow-sm flex flex-col items-center min-w-[70px]"
+              class="px-2 sm:px-4 py-1 rounded-lg sm:rounded-xl bg-white shadow-sm flex flex-col items-center min-w-[50px] sm:min-w-[70px]"
             >
-              <span class="text-[9px] uppercase font-black text-purple-500"
+              <span
+                class="text-[7px] sm:text-[9px] uppercase font-black text-purple-500"
                 >Nivel</span
               >
-              <span id="level-display" class="text-lg font-black leading-none"
+              <span
+                id="level-display"
+                class="text-sm sm:text-lg font-black leading-none"
                 >1</span
               >
             </div>
             <div
-              class="px-4 py-1 rounded-xl flex flex-col items-center min-w-[70px]"
+              class="px-2 sm:px-4 py-1 rounded-lg sm:rounded-xl flex flex-col items-center min-w-[50px] sm:min-w-[70px]"
             >
-              <span class="text-[9px] uppercase font-black text-yellow-500"
+              <span
+                class="text-[7px] sm:text-[9px] uppercase font-black text-yellow-500"
                 >Puntos</span
               >
               <span
                 id="score-display"
-                class="text-lg font-black leading-none text-slate-700"
+                class="text-sm sm:text-lg font-black leading-none text-slate-700"
                 >0</span
               >
             </div>
@@ -181,10 +179,12 @@
       </div>
     </nav>
 
-    <main class="max-w-4xl mx-auto w-full flex-grow flex flex-col items-center">
-      <div class="w-full max-w-md mb-6">
+    <main
+      class="max-w-4xl mx-auto w-full flex-grow flex flex-col items-center px-2"
+    >
+      <div class="w-full max-w-md mb-4 sm:mb-6">
         <div
-          class="w-full bg-slate-200 h-3 rounded-full overflow-hidden shadow-inner"
+          class="w-full bg-slate-200 h-2 sm:h-3 rounded-full overflow-hidden shadow-inner"
         >
           <div
             id="timer-progress"
@@ -194,7 +194,7 @@
       </div>
       <div
         id="game-grid"
-        class="grid gap-3 perspective-1000 w-full justify-items-center mb-10"
+        class="grid gap-2 sm:gap-3 perspective-1000 w-full justify-items-center mb-10"
       ></div>
     </main>
 
@@ -204,61 +204,48 @@
     >
       <div
         id="modal-content"
-        class="glass p-8 rounded-[3rem] shadow-2xl max-w-sm w-full text-center modal-animate border-4 border-white"
+        class="glass p-6 sm:p-8 rounded-[2rem] sm:rounded-[3rem] shadow-2xl max-w-sm w-full text-center modal-animate border-4 border-white"
       >
         <h2
           id="modal-title"
-          class="text-3xl font-black mb-2 text-slate-800"
+          class="text-2xl sm:text-3xl font-black mb-2 text-slate-800"
         ></h2>
-        <div id="modal-body" class="text-slate-600 font-medium mb-8"></div>
+        <div
+          id="modal-body"
+          class="text-slate-600 font-medium mb-6 sm:mb-8 text-sm sm:text-base"
+        ></div>
         <div class="flex flex-col gap-3">
           <button
             id="modal-btn-primary"
-            class="w-full bg-purple-600 hover:bg-purple-700 text-white font-black py-4 rounded-2xl shadow-lg transition-transform active:scale-95 text-xl"
+            class="w-full bg-purple-600 hover:bg-purple-700 text-white font-black py-3 sm:py-4 rounded-2xl shadow-lg transition-transform active:scale-95 text-lg sm:text-xl"
           ></button>
           <a
             href="explorar.html"
             id="modal-btn-secondary"
-            class="w-full bg-white/50 hover:bg-white text-slate-600 font-bold py-3 rounded-2xl transition-colors hidden text-lg"
+            class="w-full bg-white/50 hover:bg-white text-slate-600 font-bold py-2 sm:py-3 rounded-2xl transition-colors hidden text-base sm:text-lg"
+            >Salir</a
           >
-            Salir al Menú
-          </a>
         </div>
       </div>
     </div>
 
     <button
       id="music-toggle"
-      class="fixed bottom-6 right-6 w-14 h-14 glass rounded-full shadow-2xl flex items-center justify-center text-2xl z-40"
+      class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-12 h-12 sm:w-14 sm:h-14 glass rounded-full shadow-2xl flex items-center justify-center text-xl sm:text-2xl z-40"
     >
       🔇
     </button>
 
-    <audio
-      id="bg-music"
-      loop
-      src="https://assets.mixkit.co/music/preview/mixkit-pop-05-695.mp3"
-    ></audio>
+    <audio id="bg-music" loop src="../music/memory-bg.mp3"></audio>
     <audio
       id="snd-flip"
       src="https://assets.mixkit.co/sfx/preview/mixkit-classic-click-1117.mp3"
     ></audio>
-    <audio
-      id="snd-match"
-      src="https://assets.mixkit.co/sfx/preview/mixkit-magic-notification-ring-2359.mp3"
-    ></audio>
-    <audio
-      id="snd-wrong"
-      src="https://assets.mixkit.co/sfx/preview/mixkit-short-low-sad-trumpet-2303.mp3"
-    ></audio>
-    <audio
-      id="snd-win"
-      src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3"
-    ></audio>
-    <audio
-      id="snd-gameover"
-      src="https://assets.mixkit.co/sfx/preview/mixkit-player-losing-or-failing-2042.mp3"
-    ></audio>
+    <audio id="snd-match" src="../music/match.mp3"></audio>
+    <audio id="snd-wrong" src="../music/wrong.mp3"></audio>
+    <audio id="snd-win" src="../music/game-win.mp3"></audio>
+    <audio id="snd-gameover" src="../music/game-over.mp3"></audio>
+    <audio id="snd-alert" loop src="../music/fast-ticking.mp3"></audio>
 
     <script>
       let difficulty = "medio";
@@ -272,6 +259,7 @@
       let matchedPairs = 0;
       let isPaused = false;
       let isMusicPlaying = false;
+      let isAlertActive = false;
 
       const grid = document.getElementById("game-grid");
       const levelDisplay = document.getElementById("level-display");
@@ -279,6 +267,7 @@
       const timerProgress = document.getElementById("timer-progress");
       const musicBtn = document.getElementById("music-toggle");
       const bgMusic = document.getElementById("bg-music");
+      const sndAlert = document.getElementById("snd-alert");
       const modal = document.getElementById("modal-overlay");
       const modalTitle = document.getElementById("modal-title");
       const modalBody = document.getElementById("modal-body");
@@ -374,6 +363,16 @@
         snd.play().catch(() => {});
       }
 
+      function stopAlert() {
+        sndAlert.pause();
+        sndAlert.currentTime = 0;
+        bgMusic.volume = 1.0;
+        isAlertActive = false;
+        const timerText = document.getElementById("timer-text");
+        timerText.classList.remove("text-red-500", "animate-bounce");
+        timerProgress.classList.remove("bg-red-500");
+      }
+
       function showModal(
         title,
         bodyHTML,
@@ -398,12 +397,14 @@
         flippedCards = [];
         matchedPairs = 0;
         canFlip = false;
+        stopAlert();
 
-        // AUMENTO PROGRESIVO DE CARTAS
+        // Reanudar música al iniciar/reintentar si estaba activa
+        if (isMusicPlaying) bgMusic.play();
+
         let basePairs =
           difficulty === "facil" ? 2 : difficulty === "medio" ? 3 : 4;
-        let numPairs = basePairs + Math.floor(level * 0.7);
-        numPairs = Math.min(numPairs, 15); // Máximo 30 cartas para jugabilidad
+        let numPairs = Math.min(basePairs + Math.floor(level * 0.7), 15);
 
         let sourcePool =
           category === "animales"
@@ -418,121 +419,83 @@
           () => Math.random() - 0.5,
         );
 
-        // Grid adaptativo
         let cols =
           numPairs <= 4
-            ? "grid-cols-2 md:grid-cols-4"
+            ? "grid-cols-2 sm:grid-cols-4"
             : numPairs <= 9
-              ? "grid-cols-3 md:grid-cols-6"
-              : "grid-cols-4 md:grid-cols-6";
-        grid.className = `grid gap-3 justify-items-center ${cols}`;
+              ? "grid-cols-3 sm:grid-cols-6"
+              : "grid-cols-4 sm:grid-cols-6";
+        grid.className = `grid gap-2 sm:gap-3 justify-items-center ${cols}`;
 
         cardValues.forEach((val) => {
           const card = document.createElement("div");
+          // Tamaños responsivos adaptados a la cantidad de cartas
           const sizeClass =
             numPairs > 8
-              ? "w-20 h-28 md:w-24 md:h-32"
-              : "w-24 h-32 md:w-28 md:h-36";
+              ? "w-16 h-24 sm:w-24 sm:h-32"
+              : "w-20 h-28 sm:w-28 sm:h-36";
           card.className = `card ${sizeClass} cursor-pointer perspective-1000`;
           const folder = transportes.includes(val) ? "transportes" : "animales";
-
           card.innerHTML = `
-            <div class="card-inner shadow-lg rounded-2xl">
-              <div class="backface-hidden absolute inset-0 bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl flex items-center justify-center text-4xl border-4 border-white shadow-inner text-white">?</div>
-              <div class="backface-hidden absolute inset-0 bg-white rounded-2xl flex items-center justify-center [transform:rotateY(180deg)] border-2 border-purple-400 overflow-hidden">
+            <div class="card-inner shadow-lg rounded-xl sm:rounded-2xl">
+              <div class="backface-hidden absolute inset-0 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl sm:rounded-2xl flex items-center justify-center text-2xl sm:text-4xl border-2 sm:border-4 border-white shadow-inner text-white">?</div>
+              <div class="backface-hidden absolute inset-0 bg-white rounded-xl sm:rounded-2xl flex items-center justify-center [transform:rotateY(180deg)] border-2 border-purple-400 overflow-hidden">
                 <img src="../images/${folder}/${val}.png" alt="${val}" class="w-full h-full object-cover">
               </div>
             </div>`;
-
           card.dataset.value = val;
           card.onclick = () => flipCard(card);
           grid.appendChild(card);
         });
 
-        // Vistazo inicial se reduce ligeramente con el nivel
-        let peekTime = Math.max(1000, 2000 - level * 100);
         setTimeout(() => {
           document
             .querySelectorAll(".card")
             .forEach((c) => c.classList.add("flipped"));
-          setTimeout(() => {
-            document
-              .querySelectorAll(".card")
-              .forEach((c) => c.classList.remove("flipped"));
-            canFlip = true;
-            startTimer();
-          }, peekTime);
+          setTimeout(
+            () => {
+              document
+                .querySelectorAll(".card")
+                .forEach((c) => c.classList.remove("flipped"));
+              canFlip = true;
+              startTimer();
+            },
+            Math.max(1000, 2000 - level * 100),
+          );
         }, 500);
       }
 
       function startTimer(resume = false) {
         clearInterval(timerInterval);
-
-        // TIEMPO INVERSO: Nivel 1 = 10s, sube 2.5s por nivel, Máximo 35s
+        const timerText = document.getElementById("timer-text");
         let calculatedTime = 10 + (level - 1) * 2.5;
         let totalTime = Math.min(calculatedTime, 35);
-
         if (!resume) timeLeft = totalTime;
 
         timerInterval = setInterval(() => {
           if (!isPaused) {
             timeLeft--;
-            const percentage = (timeLeft / totalTime) * 100;
-            timerProgress.style.width = percentage + "%";
-
-            // Alerta visual de tiempo bajo (3 segundos o menos)
-            if (timeLeft <= 3) {
-              timerProgress.classList.add("bg-red-500");
-              timerProgress.classList.remove(
-                "bg-gradient-to-r",
-                "from-blue-400",
-                "to-purple-500",
-              );
-            } else {
-              timerProgress.classList.remove("bg-red-500");
-              timerProgress.classList.add(
-                "bg-gradient-to-r",
-                "from-blue-400",
-                "to-purple-500",
-              );
-            }
-
-            if (timeLeft <= 0) gameOver();
-          }
-        }, 1000);
-      }
-
-      function startTimer(resume = false) {
-        clearInterval(timerInterval);
-        const timerText = document.getElementById("timer-text"); // Referencia al nuevo texto
-
-        let calculatedTime = 10 + (level - 1) * 2.5;
-        let totalTime = Math.min(calculatedTime, 35);
-
-        if (!resume) timeLeft = totalTime;
-
-        timerInterval = setInterval(() => {
-          if (!isPaused) {
-            timeLeft--;
-
-            // Actualizar Texto del Cronómetro
             const minutes = Math.floor(timeLeft / 60);
             const seconds = timeLeft % 60;
             timerText.innerText = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+            timerProgress.style.width = (timeLeft / totalTime) * 100 + "%";
 
-            const percentage = (timeLeft / totalTime) * 100;
-            timerProgress.style.width = percentage + "%";
-
-            // Alerta visual
-            if (timeLeft <= 3) {
+            if (timeLeft <= 5 && timeLeft > 0) {
               timerProgress.classList.add("bg-red-500");
               timerText.classList.add("text-red-500", "animate-bounce");
-            } else {
-              timerProgress.classList.remove("bg-red-500");
-              timerText.classList.remove("text-red-500", "animate-bounce");
+              if (!isAlertActive && isMusicPlaying) {
+                sndAlert.play();
+                bgMusic.volume = 0.4;
+                isAlertActive = true;
+              }
+            } else if (timeLeft > 5) {
+              stopAlert();
             }
 
-            if (timeLeft <= 0) gameOver();
+            if (timeLeft <= 0) {
+              stopAlert();
+              gameOver();
+            }
           }
         }, 1000);
       }
@@ -576,70 +539,37 @@
         }
       }
 
-      function lanzarConfeti() {
-        const duration = 3 * 1000;
-        const animationEnd = Date.now() + duration;
-        const defaults = {
-          startVelocity: 30,
-          spread: 360,
-          ticks: 60,
-          zIndex: 0,
-        };
-
-        const randomInRange = (min, max) => Math.random() * (max - min) + min;
-
-        const interval = setInterval(function () {
-          const timeLeft = animationEnd - Date.now();
-
-          if (timeLeft <= 0) {
-            return clearInterval(interval);
-          }
-
-          const particleCount = 50 * (timeLeft / duration);
-
-          // Lanzar confeti desde dos puntos (izquierda y derecha)
-          confetti({
-            ...defaults,
-            particleCount,
-            origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
-          });
-          confetti({
-            ...defaults,
-            particleCount,
-            origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
-          });
-        }, 250);
-      }
-
       function handleWin() {
         clearInterval(timerInterval);
+        stopAlert();
         playSnd("snd-win");
-        lanzarConfeti();
-        if (level === 10) {
-          showModal(
-            "🏆 ¡VICTORIA!",
-            `¡Completaste el reto! Puntos: ${score}`,
-            "REPETIR",
-            resetGame,
-            true,
-          );
-        } else {
-          showModal(
-            `¡NIVEL ${level} LISTO!`,
-            "Tu memoria es excelente.",
-            "SIGUIENTE",
-            () => {
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ["#8b5cf6", "#ec4899", "#22c55e"],
+        });
+        showModal(
+          level === 10 ? "🏆 ¡VICTORIA!" : `¡NIVEL ${level} LISTO!`,
+          level === 10
+            ? `¡Completaste el reto! Puntos: ${score}`
+            : "Tu memoria es excelente.",
+          level === 10 ? "REPETIR" : "SIGUIENTE",
+          () => {
+            if (level < 10) {
               level++;
               updateUI();
               initGame();
-            },
-            true,
-          );
-        }
+            } else resetGame();
+          },
+          true,
+        );
       }
 
       function gameOver() {
         clearInterval(timerInterval);
+        stopAlert();
+        bgMusic.pause(); // Se pausa al perder
         playSnd("snd-gameover");
         showModal(
           "TIEMPO FUERA",
@@ -654,7 +584,7 @@
         level = 1;
         score = 0;
         updateUI();
-        initGame();
+        initGame(); // Aquí ya está integrada la lógica de bgMusic.play()
       }
 
       function updateUI() {
@@ -667,6 +597,8 @@
         isPaused = !isPaused;
         if (isPaused) {
           clearInterval(timerInterval);
+          bgMusic.pause();
+          sndAlert.pause();
           grid.classList.add("paused-cards");
           showModal(
             "PAUSA",
@@ -677,6 +609,8 @@
           );
         } else {
           grid.classList.remove("paused-cards");
+          if (isMusicPlaying) bgMusic.play();
+          if (isAlertActive) sndAlert.play();
           startTimer(true);
         }
       }
@@ -686,19 +620,19 @@
           "COGNIPLAY",
           `<div class="text-left space-y-4">
             <div>
-              <p class="font-black text-sm mb-2 text-purple-500">DIFICULTAD</p>
+              <p class="font-black text-[10px] mb-2 text-purple-500 uppercase">Dificultad</p>
               <div class="flex gap-2">
-                <button onclick="setDifficulty('facil', this)" class="btn-difficulty glass flex-1 py-2 rounded-xl font-bold">Fácil</button>
-                <button onclick="setDifficulty('medio', this)" class="btn-difficulty glass flex-1 py-2 rounded-xl font-bold btn-active">Medio</button>
-                <button onclick="setDifficulty('dificil', this)" class="btn-difficulty glass flex-1 py-2 rounded-xl font-bold">Difícil</button>
+                <button onclick="setDifficulty('facil', this)" class="btn-difficulty glass flex-1 py-2 rounded-xl font-bold text-sm">Fácil</button>
+                <button onclick="setDifficulty('medio', this)" class="btn-difficulty glass flex-1 py-2 rounded-xl font-bold btn-active text-sm">Medio</button>
+                <button onclick="setDifficulty('dificil', this)" class="btn-difficulty glass flex-1 py-2 rounded-xl font-bold text-sm">Difícil</button>
               </div>
             </div>
             <div>
-              <p class="font-black text-sm mb-2 text-purple-500">TEMÁTICA</p>
+              <p class="font-black text-[10px] mb-2 text-purple-500 uppercase">Temática</p>
               <div class="flex gap-2">
-                <button onclick="setCategory('animales', this)" class="btn-category glass flex-1 py-2 rounded-xl font-bold btn-active">Animales</button>
-                <button onclick="setCategory('transportes', this)" class="btn-category glass flex-1 py-2 rounded-xl font-bold">Viajes</button>
-                <button onclick="setCategory('mixto', this)" class="btn-category glass flex-1 py-2 rounded-xl font-bold">Mixto</button>
+                <button onclick="setCategory('animales', this)" class="btn-category glass flex-1 py-2 rounded-xl font-bold btn-active text-sm">Animales</button>
+                <button onclick="setCategory('transportes', this)" class="btn-category glass flex-1 py-2 rounded-xl font-bold text-sm">Viajes</button>
+                <button onclick="setCategory('mixto', this)" class="btn-category glass flex-1 py-2 rounded-xl font-bold text-sm">Mixto</button>
               </div>
             </div>
           </div>`,
