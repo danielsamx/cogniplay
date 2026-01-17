@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sopa Mágica Pro | CogniPlay</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap");
+      :root {
+        --primary-purple: #8b5cf6;
+        --deep-slate: #1e293b;
+        --success-green: #22c55e;
+      }
+
+      body {
+        height: 100vh;
+        overflow: hidden;
+        font-family: "Outfit", sans-serif;
+        background: radial-gradient(circle at top, #fdfcfd 0%, #eef2ff 100%);
+        display: flex;
+        flex-direction: column;
+        color: var(--deep-slate);
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      .timer-wrapper {
+        width: 100%;
+        max-width: 500px;
+        position: relative;
+        padding-top: 25px;
+      }
+      .timer-label {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        font-weight: 900;
+        font-size: 0.8rem;
+        letter-spacing: 0.1em;
+      }
+      .timer-container {
+        height: 20px;
+        background: #e2e8f0;
+        border-radius: 99px;
+        border: 4px solid white;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        position: relative;
+      }
+      #timer-bar {
+        height: 100%;
+        width: 100%;
+        background: linear-gradient(90deg, #8b5cf6, #ec4899, #f43f5e);
+        background-size: 200% 100%;
+        transition: width 0.3s linear;
+        animation: gradientMove 3s linear infinite;
+      }
+
+      @keyframes gradientMove {
+        0% {
+          background-position: 0% 50%;
+        }
+        100% {
+          background-position: 100% 50%;
+        }
+      }
+      .timer-danger {
+        animation: shake 0.2s infinite ease-in-out;
+      }
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        25% {
+          transform: translateX(-2px);
+        }
+        75% {
+          transform: translateX(2px);
+        }
+      }
+
+      .letter-cell {
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        border-radius: 12px;
+        font-weight: 900;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border: 2px solid transparent;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: none;
+      }
+      .letter-cell.selecting {
+        background: var(--primary-purple) !important;
+        color: white !important;
+        transform: scale(0.9);
+      }
+      .letter-cell.found {
+        background: var(--success-green) !important;
+        color: white !important;
+        animation: heartBeat 0.5s;
+      }
+
+      .clue-card {
+        aspect-ratio: 1;
+        background: white;
+        border-radius: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 0px #f1f5f9;
+        border: 2px solid #f8fafc;
+      }
+      .custom-scroll::-webkit-scrollbar {
+        width: 5px;
+      }
+      .custom-scroll::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+      }
+      .btn-primary {
+        transition: all 0.2s;
+        cursor: pointer;
+        box-shadow: 0 6px 0 #4c1d95;
+      }
+      .btn-primary:active {
+        transform: translateY(4px);
+        box-shadow: 0 2px 0 #4c1d95;
+      }
+    </style>
+  </head>
+  <body class="p-6">
+    <header
+      class="flex justify-between items-center h-[10vh] max-w-7xl mx-auto w-full mb-6 animate__animated animate__backInDown"
+    >
+      <div class="flex items-center gap-4">
+        <div
+          class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-xl text-3xl"
+        >
+          🧩
+        </div>
+        <div>
+          <h1 class="text-2xl font-black text-slate-800 tracking-tight">
+            SOPA MÁGICA
+          </h1>
+          <span
+            class="bg-purple-600 text-white px-3 py-0.5 rounded-full font-bold text-[10px]"
+            >NIVEL <span id="lvl-txt">1</span></span
+          >
+        </div>
+      </div>
+      <div
+        class="bg-white px-8 py-3 rounded-3xl shadow-lg border-2 border-purple-50 flex flex-col items-center min-w-[120px]"
+      >
+        <span class="text-[10px] font-black text-slate-400 uppercase"
+          >Score</span
+        >
+        <span id="score" class="text-3xl font-black text-purple-600">0</span>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto w-full grid grid-cols-12 gap-8 h-[75vh]">
+      <aside class="col-span-3 flex flex-col gap-4 h-full overflow-hidden">
+        <div
+          class="bg-slate-800 text-white py-3 rounded-2xl text-center font-black text-xs tracking-[0.2em]"
+        >
+          PISTAS MÁGICAS
+        </div>
+        <div
+          id="clues-container"
+          class="grid grid-cols-2 gap-4 overflow-y-auto p-2 custom-scroll"
+        ></div>
+      </aside>
+
+      <section
+        class="col-span-6 flex flex-col items-center justify-start gap-8"
+      >
+        <div class="timer-wrapper">
+          <div class="timer-label text-slate-500">
+            TIEMPO: <span id="time-number">100</span>%
+          </div>
+          <div class="timer-container" id="timer-box">
+            <div id="timer-bar"></div>
+          </div>
+        </div>
+        <div
+          id="game-board"
+          class="w-full aspect-square max-w-[480px] bg-slate-200 p-3 rounded-[2.5rem] shadow-2xl grid gap-2"
+        ></div>
+      </section>
+
+      <aside class="col-span-3 h-full overflow-hidden">
+        <div
+          class="bg-white rounded-[2.5rem] p-6 h-full shadow-xl border-2 border-slate-50 flex flex-col"
+        >
+          <p
+            class="text-center font-black text-slate-400 uppercase text-[10px] mb-6 tracking-widest"
+          >
+            Tu Progreso
+          </p>
+          <div
+            id="levels-map"
+            class="grid grid-cols-5 gap-3 overflow-y-auto pr-1 custom-scroll p-1"
+          ></div>
+        </div>
+      </aside>
+    </main>
+
+    <div
+      id="modal-overlay"
+      class="fixed inset-0 bg-slate-900/80 backdrop-blur-xl z-50 flex items-center justify-center hidden"
+    >
+      <div
+        class="bg-white p-10 rounded-[3.5rem] shadow-2xl max-w-sm w-full text-center border-4 border-purple-100 animate__animated animate__jackInTheBox"
+      >
+        <div id="modal-icon" class="text-7xl mb-4"></div>
+        <h2
+          id="modal-title"
+          class="text-4xl font-black mb-2 text-slate-800"
+        ></h2>
+        <p id="modal-body" class="text-slate-500 mb-8 font-medium"></p>
+        <button
+          id="modal-btn"
+          class="btn-primary w-full bg-purple-600 text-white font-black py-5 rounded-2xl text-lg uppercase"
+        >
+          ¡Vamos!
+        </button>
+      </div>
+    </div>
+
+    <audio
+      id="snd-success"
+      src="https://cdn.pixabay.com/audio/2021/08/04/audio_bb4a4f1d50.mp3"
+    ></audio>
+    <audio
+      id="snd-select"
+      src="https://cdn.pixabay.com/audio/2022/03/15/audio_7300f81d0d.mp3"
+    ></audio>
+    <audio
+      id="snd-error"
+      src="https://cdn.pixabay.com/audio/2022/03/24/audio_73147814b6.mp3"
+    ></audio>
+    <audio
+      id="snd-win"
+      src="https://cdn.pixabay.com/audio/2024/02/07/audio_45f949448d.mp3"
+    ></audio>
+
+    <script>
+      const WORDS_DB = [
+        { w: "GATO", i: "🐱" },
+        { w: "LUNA", i: "🌙" },
+        { w: "DINO", i: "🦖" },
+        { w: "SOL", i: "☀️" },
+        { w: "PERRO", i: "🐶" },
+        { w: "ROBOT", i: "🤖" },
+        { w: "PIZZA", i: "🍕" },
+        { w: "LIBRO", i: "📖" },
+        { w: "COHETE", i: "🚀" },
+        { w: "FUEGO", i: "🔥" },
+        { w: "AVION", i: "✈️" },
+        { w: "BOLA", i: "⚽" },
+      ];
+
+      let currentLevel = 1,
+        score = 0,
+        wordsInLevel = [],
+        isSelecting = false;
+      let startCell = null,
+        selectedCells = [],
+        timeLeft = 100,
+        timerInterval;
+
+      function loadLevel(lvl) {
+        clearInterval(timerInterval);
+        currentLevel = lvl;
+        timeLeft = 100;
+        document.getElementById("lvl-txt").innerText = lvl;
+        let numWords = Math.min(3 + Math.floor(lvl / 4), 8);
+        wordsInLevel = [...WORDS_DB]
+          .sort(() => 0.5 - Math.random())
+          .slice(0, numWords)
+          .map((o) => ({ ...o, found: false }));
+        generateBoard();
+        renderClues();
+        renderMap();
+        startTimer();
+      }
+
+      function startTimer() {
+        let speed = 0.15 + currentLevel * 0.03;
+        timerInterval = setInterval(() => {
+          timeLeft -= speed;
+          let safeTime = Math.max(0, timeLeft);
+          document.getElementById("timer-bar").style.width = safeTime + "%";
+          document.getElementById("time-number").innerText =
+            Math.ceil(safeTime);
+          if (safeTime < 25)
+            document.getElementById("timer-box").classList.add("timer-danger");
+          else
+            document
+              .getElementById("timer-box")
+              .classList.remove("timer-danger");
+          if (safeTime <= 0) {
+            clearInterval(timerInterval);
+            playSound("snd-error");
+            showModal("⌛", "¡OOPS!", "Se agotó el tiempo.", "Reintentar", () =>
+              loadLevel(currentLevel),
+            );
+          }
+        }, 200);
+      }
+
+      function generateBoard() {
+        const size = 10;
+        const container = document.getElementById("game-board");
+        container.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+        container.innerHTML = "";
+        let grid = Array(size)
+          .fill()
+          .map(() => Array(size).fill(""));
+
+        wordsInLevel.forEach((obj) => {
+          let placed = false;
+          while (!placed) {
+            const isH = Math.random() > 0.5;
+            const r = Math.floor(
+              Math.random() * (isH ? size : size - obj.w.length),
+            );
+            const c = Math.floor(
+              Math.random() * (isH ? size - obj.w.length : size),
+            );
+            let canPlace = true;
+            for (let i = 0; i < obj.w.length; i++) {
+              if (grid[r + (isH ? 0 : i)][c + (isH ? i : 0)] !== "")
+                canPlace = false;
+            }
+            if (canPlace) {
+              for (let i = 0; i < obj.w.length; i++)
+                grid[r + (isH ? 0 : i)][c + (isH ? i : 0)] = obj.w[i];
+              placed = true;
+            }
+          }
+        });
+
+        for (let r = 0; r < size; r++) {
+          for (let c = 0; c < size; c++) {
+            const cell = document.createElement("div");
+            cell.className = "letter-cell shadow-sm text-slate-700";
+            cell.dataset.r = r;
+            cell.dataset.c = c;
+            cell.innerText =
+              grid[r][c] ||
+              "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[Math.floor(Math.random() * 26)];
+            cell.setAttribute("draggable", "false");
+            cell.onmousedown = (e) => handleStart(e, cell);
+            cell.onmouseover = () => handleMove(cell);
+            cell.ontouchstart = (e) => handleStart(e, cell);
+            container.appendChild(cell);
+          }
+        }
+      }
+
+      function handleStart(e, cell) {
+        if (cell.classList.contains("found")) return;
+        isSelecting = true;
+        startCell = {
+          r: parseInt(cell.dataset.r),
+          c: parseInt(cell.dataset.c),
+        };
+        selectedCells = [cell];
+        cell.classList.add("selecting");
+        playSound("snd-select");
+        window.onmouseup = handleEnd;
+        window.ontouchend = handleEnd;
+        if (e.type === "touchstart") {
+          window.ontouchmove = (te) => {
+            const touch = te.touches[0];
+            const target = document
+              .elementFromPoint(touch.clientX, touch.clientY)
+              ?.closest(".letter-cell");
+            if (target) handleMove(target);
+          };
+        }
+      }
+
+      function handleMove(cell) {
+        if (!isSelecting || cell.classList.contains("found")) return;
+        document
+          .querySelectorAll(".letter-cell.selecting")
+          .forEach((el) => el.classList.remove("selecting"));
+        selectedCells = [];
+        const r2 = parseInt(cell.dataset.r),
+          c2 = parseInt(cell.dataset.c);
+        const dr = r2 - startCell.r,
+          dc = c2 - startCell.c;
+        if (dr !== 0 && dc !== 0 && Math.abs(dr) !== Math.abs(dc)) return;
+        const steps = Math.max(Math.abs(dr), Math.abs(dc));
+        const ur = dr === 0 ? 0 : dr / Math.abs(dr);
+        const uc = dc === 0 ? 0 : dc / Math.abs(dc);
+        for (let i = 0; i <= steps; i++) {
+          const el = document.querySelector(
+            `.letter-cell[data-r="${startCell.r + i * ur}"][data-c="${startCell.c + i * uc}"]`,
+          );
+          if (el) {
+            el.classList.add("selecting");
+            selectedCells.push(el);
+          }
+        }
+      }
+
+      function handleEnd() {
+        if (!isSelecting) return;
+        isSelecting = false;
+        const word = selectedCells.map((c) => c.innerText).join("");
+        const rev = word.split("").reverse().join("");
+        const match = wordsInLevel.find(
+          (w) => !w.found && (word === w.w || rev === w.w),
+        );
+        if (match) {
+          match.found = true;
+          selectedCells.forEach((c) => {
+            c.classList.remove("selecting");
+            c.classList.add("found");
+          });
+          document.getElementById(`clue-${match.w}`).style.opacity = "0.2";
+          score += 100;
+          document.getElementById("score").innerText = score;
+          playSound("snd-success");
+          if (wordsInLevel.every((w) => w.found)) winLevel();
+        } else {
+          selectedCells.forEach((c) => c.classList.remove("selecting"));
+        }
+        window.onmouseup = null;
+        window.ontouchmove = null;
+      }
+
+      function winLevel() {
+        clearInterval(timerInterval);
+        // LANZAR CONFETI
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ["#8b5cf6", "#ec4899", "#22c55e"],
+        });
+
+        setTimeout(() => {
+          playSound("snd-win");
+          showModal(
+            "🌟",
+            "¡FANTÁSTICO!",
+            "Nivel superado con éxito.",
+            "Siguiente",
+            () => loadLevel(currentLevel + 1),
+          );
+        }, 300);
+      }
+
+      function playSound(id) {
+        const s = document.getElementById(id);
+        if (!s) return;
+        s.currentTime = 0;
+        s.play().catch(() => {});
+      }
+
+      function showModal(icon, title, body, btn, action) {
+        const modal = document.getElementById("modal-overlay");
+        document.getElementById("modal-icon").innerText = icon;
+        document.getElementById("modal-title").innerText = title;
+        document.getElementById("modal-body").innerText = body;
+        const b = document.getElementById("modal-btn");
+        b.innerText = btn;
+        b.onclick = () => {
+          modal.classList.add("hidden");
+          action();
+        };
+        modal.classList.remove("hidden");
+      }
+
+      function renderClues() {
+        const container = document.getElementById("clues-container");
+        container.innerHTML = "";
+        wordsInLevel.forEach((w) => {
+          const card = document.createElement("div");
+          card.id = `clue-${w.w}`;
+          card.className = "clue-card text-4xl";
+          card.innerHTML = w.i;
+          container.appendChild(card);
+        });
+      }
+
+      function renderMap() {
+        const m = document.getElementById("levels-map");
+        m.innerHTML = "";
+        for (let i = 1; i <= 20; i++) {
+          const d = document.createElement("div");
+          d.className = `aspect-square flex items-center justify-center rounded-xl font-black text-xs ${i === currentLevel ? "bg-purple-600 text-white shadow-lg" : "bg-slate-100 text-slate-300"}`;
+          d.innerText = i;
+          m.appendChild(d);
+        }
+      }
+
+      window.onload = () => loadLevel(1);
+    </script>
+  </body>
+</html>

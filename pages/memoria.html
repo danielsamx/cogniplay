@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reto de Memoria | CogniPlay</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+      body {
+        background: radial-gradient(
+          circle at center,
+          #ffffff,
+          #e2d1f9,
+          #d0e8ff
+        );
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .perspective-1000 {
+        perspective: 1000px;
+      }
+      .card-inner {
+        transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transform-style: preserve-3d;
+        position: relative;
+        width: 100%;
+        height: 100%;
+      }
+      .card.flipped .card-inner {
+        transform: rotateY(180deg);
+      }
+      .backface-hidden {
+        backface-visibility: hidden;
+      }
+
+      .glass {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+      }
+
+      .modal-animate {
+        animation: zoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      @keyframes zoomIn {
+        from {
+          opacity: 0;
+          transform: scale(0.8);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      /* Clase para ocultar cartas en pausa */
+      .paused-cards .card-inner {
+        filter: blur(10px) grayscale(1);
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body class="p-4 font-sans text-slate-800">
+    <nav
+      class="max-w-4xl mx-auto w-full flex justify-between items-center mb-6 z-10"
+    >
+      <div class="flex items-center gap-3">
+        <a
+          href="../pages//explorar.html"
+          class="glass p-3 rounded-2xl shadow-lg hover:bg-white transition-all hover:scale-110"
+          title="Volver al Menú"
+          >🏠</a
+        >
+        <button
+          onclick="togglePause()"
+          class="glass p-3 rounded-2xl shadow-lg hover:bg-white transition-all"
+        >
+          ⏸️
+        </button>
+      </div>
+
+      <div class="flex gap-2">
+        <div
+          class="glass px-4 py-2 rounded-2xl shadow-lg border-b-4 border-purple-400"
+        >
+          <p
+            class="text-[10px] uppercase font-black text-purple-500 leading-none"
+            a
+          >
+            Nivel
+          </p>
+          <span id="level-display" class="text-xl font-black">1</span>
+        </div>
+        <div
+          class="glass px-4 py-2 rounded-2xl shadow-lg border-b-4 border-yellow-400 text-right"
+        >
+          <p
+            class="text-[10px] uppercase font-black text-yellow-600 leading-none"
+          >
+            Puntos
+          </p>
+          <span id="score-display" class="text-xl font-black">0</span>
+        </div>
+      </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto w-full flex-grow flex flex-col items-center">
+      <div class="w-full max-w-md mb-6">
+        <div
+          class="w-full bg-slate-200 h-3 rounded-full overflow-hidden shadow-inner"
+        >
+          <div
+            id="timer-progress"
+            class="h-full bg-gradient-to-r from-blue-400 to-purple-500 w-full transition-all duration-1000"
+          ></div>
+        </div>
+      </div>
+      <div
+        id="game-grid"
+        class="grid gap-3 perspective-1000 w-full justify-items-center mb-10"
+      ></div>
+    </main>
+
+    <div
+      id="modal-overlay"
+      class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4"
+    >
+      <div
+        id="modal-content"
+        class="glass p-8 rounded-[3rem] shadow-2xl max-w-sm w-full text-center modal-animate border-4 border-white"
+      >
+        <h2
+          id="modal-title"
+          class="text-3xl font-black mb-2 text-slate-800"
+        ></h2>
+        <p id="modal-body" class="text-slate-600 font-medium mb-8"></p>
+
+        <div class="flex flex-col gap-3">
+          <button
+            id="modal-btn-primary"
+            class="w-full bg-purple-600 hover:bg-purple-700 text-white font-black py-4 rounded-2xl shadow-lg transition-transform active:scale-95 text-xl"
+          ></button>
+          <button
+            id="modal-btn-secondary"
+            class="w-full bg-white/50 hover:bg-white text-slate-600 font-bold py-3 rounded-2xl transition-colors hidden text-lg"
+          >
+            Salir al Menú
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <button
+      id="music-toggle"
+      class="fixed bottom-6 right-6 w-14 h-14 glass rounded-full shadow-2xl flex items-center justify-center text-2xl z-40"
+    >
+      🔇
+    </button>
+
+    <audio
+      id="bg-music"
+      loop
+      src="https://assets.mixkit.co/music/preview/mixkit-pop-05-695.mp3"
+    ></audio>
+    <audio
+      id="snd-flip"
+      src="https://assets.mixkit.co/sfx/preview/mixkit-classic-click-1117.mp3"
+    ></audio>
+    <audio
+      id="snd-match"
+      src="https://assets.mixkit.co/sfx/preview/mixkit-magic-notification-ring-2359.mp3"
+    ></audio>
+    <audio
+      id="snd-wrong"
+      src="https://assets.mixkit.co/sfx/preview/mixkit-short-low-sad-trumpet-2303.mp3"
+    ></audio>
+    <audio
+      id="snd-win"
+      src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3"
+    ></audio>
+    <audio
+      id="snd-gameover"
+      src="https://assets.mixkit.co/sfx/preview/mixkit-player-losing-or-failing-2042.mp3"
+    ></audio>
+
+    <script>
+      const grid = document.getElementById("game-grid");
+      const levelDisplay = document.getElementById("level-display");
+      const scoreDisplay = document.getElementById("score-display");
+      const timerProgress = document.getElementById("timer-progress");
+      const musicBtn = document.getElementById("music-toggle");
+      const bgMusic = document.getElementById("bg-music");
+
+      const modal = document.getElementById("modal-overlay");
+      const modalTitle = document.getElementById("modal-title");
+      const modalBody = document.getElementById("modal-body");
+      const btnPrimary = document.getElementById("modal-btn-primary");
+      const btnSecondary = document.getElementById("modal-btn-secondary");
+
+      let level = 1;
+      let score = 0;
+      let timeLeft;
+      let timerInterval;
+      let flippedCards = [];
+      let canFlip = false;
+      let matchedPairs = 0;
+      let isPaused = false;
+      let isMusicPlaying = false;
+
+      const emojis = [
+        "🍎",
+        "🚀",
+        "🌈",
+        "🍦",
+        "👾",
+        "🐱",
+        "🍕",
+        "🎸",
+        "⚽",
+        "💎",
+        "👻",
+        "🌞",
+        "🍔",
+        "🎨",
+        "🎭",
+        "🛸",
+      ];
+
+      musicBtn.onclick = () => {
+        if (isMusicPlaying) {
+          bgMusic.pause();
+          musicBtn.innerText = "🔇";
+        } else {
+          bgMusic.play();
+          musicBtn.innerText = "🎵";
+        }
+        isMusicPlaying = !isMusicPlaying;
+      };
+
+      function playSnd(id) {
+        const snd = document.getElementById(id);
+        snd.currentTime = 0;
+        snd.play().catch(() => {});
+      }
+
+      // Sistema de Modales Mejorado
+      function showModal(
+        title,
+        body,
+        primaryText,
+        primaryAction,
+        showExit = false,
+      ) {
+        modalTitle.innerText = title;
+        modalBody.innerText = body;
+        btnPrimary.innerText = primaryText;
+        btnPrimary.onclick = () => {
+          modal.classList.add("hidden");
+          primaryAction();
+        };
+
+        if (showExit) {
+          btnSecondary.classList.remove("hidden");
+          btnSecondary.onclick = () => (window.location.href = "index.html");
+        } else {
+          btnSecondary.classList.add("hidden");
+        }
+
+        modal.classList.remove("hidden");
+      }
+
+      function togglePause() {
+        if (!canFlip && !isPaused) return;
+        isPaused = !isPaused;
+        if (isPaused) {
+          clearInterval(timerInterval);
+          grid.classList.add("paused-cards");
+          showModal(
+            "PAUSA",
+            "¿Quieres continuar entrenando?",
+            "REANUDAR",
+            togglePause,
+            true,
+          );
+        } else {
+          grid.classList.remove("paused-cards");
+          startTimer(true);
+        }
+      }
+
+      function initGame() {
+        grid.innerHTML = "";
+        grid.classList.remove("paused-cards");
+        flippedCards = [];
+        matchedPairs = 0;
+        canFlip = false;
+
+        let numPairs = Math.min(2 + Math.floor((level - 1) / 2) * 2, 12);
+        const gameEmojis = [...emojis]
+          .sort(() => 0.5 - Math.random())
+          .slice(0, numPairs);
+        const cardValues = [...gameEmojis, ...gameEmojis].sort(
+          () => Math.random() - 0.5,
+        );
+
+        grid.className = `grid gap-3 justify-items-center ${numPairs <= 4 ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3 md:grid-cols-4"}`;
+
+        cardValues.forEach((val) => {
+          const card = document.createElement("div");
+          card.className =
+            "card w-28 h-32 md:w-28 md:h-32 cursor-pointer perspective-1000";
+          card.innerHTML = `<div class="card-inner shadow-lg rounded-2xl"><div class="backface-hidden absolute inset-0 bg-white rounded-2xl flex items-center justify-center text-2xl border-2 border-slate-100 shadow-inner">❓</div><div class="backface-hidden absolute inset-0 bg-white rounded-2xl flex items-center justify-center text-3xl [transform:rotateY(180deg)] border-2 border-purple-400">${val}</div></div>`;
+          card.dataset.value = val;
+          card.onclick = () => flipCard(card);
+          grid.appendChild(card);
+        });
+
+        setTimeout(() => {
+          document
+            .querySelectorAll(".card")
+            .forEach((c) => c.classList.add("flipped"));
+          setTimeout(() => {
+            document
+              .querySelectorAll(".card")
+              .forEach((c) => c.classList.remove("flipped"));
+            canFlip = true;
+            startTimer();
+          }, 2000);
+        }, 500);
+      }
+
+      function startTimer(resume = false) {
+        clearInterval(timerInterval);
+        const totalPerLevel = Math.max(8, 35 - level * 2.5);
+        if (!resume) timeLeft = totalPerLevel;
+
+        timerInterval = setInterval(() => {
+          if (!isPaused) {
+            timeLeft--;
+            timerProgress.style.width = (timeLeft / totalPerLevel) * 100 + "%";
+            if (timeLeft <= 0) gameOver();
+          }
+        }, 1000);
+      }
+
+      function flipCard(card) {
+        if (
+          !canFlip ||
+          isPaused ||
+          card.classList.contains("flipped") ||
+          flippedCards.includes(card)
+        )
+          return;
+        playSnd("snd-flip");
+        card.classList.add("flipped");
+        flippedCards.push(card);
+        if (flippedCards.length === 2) {
+          canFlip = false;
+          checkMatch();
+        }
+      }
+
+      function checkMatch() {
+        const [c1, c2] = flippedCards;
+        if (c1.dataset.value === c2.dataset.value) {
+          playSnd("snd-match");
+          matchedPairs++;
+          score += level * 100;
+          updateUI();
+          flippedCards = [];
+          canFlip = true;
+          if (matchedPairs === document.querySelectorAll(".card").length / 2)
+            handleWin();
+        } else {
+          setTimeout(() => {
+            playSnd("snd-wrong");
+            c1.classList.remove("flipped");
+            c2.classList.remove("flipped");
+            flippedCards = [];
+            canFlip = true;
+          }, 800);
+        }
+      }
+
+      function handleWin() {
+        clearInterval(timerInterval);
+        if (level === 10) {
+          playSnd("snd-win");
+          showModal(
+            "🏆 ¡VICTORIA!",
+            `¡Completaste el reto! Puntos: ${score}`,
+            "REPETIR RETO",
+            resetGame,
+            true,
+          );
+        } else {
+          playSnd("snd-win");
+          showModal(
+            `¡NIVEL ${level} LISTO!`,
+            "Tu memoria es excelente.",
+            "SIGUIENTE",
+            () => {
+              level++;
+              updateUI();
+              initGame();
+            },
+            true,
+          );
+        }
+      }
+
+      function gameOver() {
+        clearInterval(timerInterval);
+        playSnd("snd-gameover");
+        showModal(
+          "TIEMPO FUERA",
+          `Llegaste al nivel ${level}.`,
+          "REINTENTAR",
+          resetGame,
+          true,
+        );
+      }
+
+      function resetGame() {
+        level = 1;
+        score = 0;
+        updateUI();
+        initGame();
+      }
+
+      function updateUI() {
+        levelDisplay.innerText = level;
+        scoreDisplay.innerText = score;
+      }
+
+      window.onload = () => {
+        showModal(
+          "COGNIPLAY",
+          "Encuentra todos los pares antes de que el tiempo se agote.",
+          "¡JUGAR!",
+          () => {
+            if (!isMusicPlaying) musicBtn.click();
+            initGame();
+          },
+          true,
+        );
+      };
+    </script>
+  </body>
+</html>
