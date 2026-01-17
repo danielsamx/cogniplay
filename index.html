@@ -14,13 +14,13 @@
       body,
       html {
         height: 100%;
-        overflow-x: hidden;
         background: linear-gradient(-45deg, #fdfcfb, #e2d1f9, #e0f2fe, #fef3c7);
         background-size: 400% 400%;
         animation: gradientBG 15s ease infinite;
+        overflow-x: hidden;
       }
 
-      @media (min-width: 768px) {
+      @media (min-width: 1024px) {
         body,
         html {
           overflow: hidden;
@@ -75,16 +75,12 @@
           opacity: 1;
           transform: scale(1.05);
         }
-        70% {
-          transform: scale(0.9);
-        }
         100% {
           transform: scale(1);
         }
       }
 
       .btn-play {
-        position: relative;
         background: linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899);
         background-size: 200% 200%;
         animation:
@@ -116,7 +112,6 @@
         }
       }
 
-      /* Animación de la Barra de Carga */
       .energy-pulse {
         animation: pulseBar 4s ease-in-out infinite;
       }
@@ -124,27 +119,18 @@
       @keyframes pulseBar {
         0% {
           width: 5%;
-          filter: hue-rotate(0deg);
         }
         50% {
           width: 100%;
-          filter: hue-rotate(90deg);
         }
         100% {
           width: 5%;
-          filter: hue-rotate(0deg);
         }
       }
 
       .avatar-card {
         transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         border: 4px solid transparent;
-      }
-
-      input[type="radio"]:focus-visible + label {
-        outline: 4px solid #22c55e;
-        outline-offset: 8px;
-        border-radius: 1.5rem;
       }
 
       input[type="radio"]:checked + label {
@@ -154,67 +140,47 @@
         box-shadow: 0 15px 30px rgba(139, 92, 246, 0.3);
       }
 
-      /* Tooltips Abajo */
-      [data-tooltip] {
+      /* TOOLTIP CUSTOM SYSTEM */
+      .has-tooltip {
         position: relative;
+        display: flex;
+        justify-content: center;
       }
 
-      [data-tooltip]::after {
-        content: attr(data-tooltip);
+      .tooltip-text {
+        visibility: hidden;
         position: absolute;
-        top: 130%;
-        left: 50%;
-        transform: translateX(-50%) translateY(-10px) scale(0);
-        background: #1e293b;
-        color: white;
-        padding: 0.5rem 0.8rem;
-        border-radius: 0.6rem;
-        font-size: 0.7rem;
+        top: 110%; /* Debajo del botón */
+        background-color: #1e293b;
+        color: #fff;
+        text-align: center;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.75rem;
         font-weight: bold;
         white-space: nowrap;
-        transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        z-index: 50;
         opacity: 0;
-        pointer-events: none;
-        z-index: 100;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+        transition: opacity 0.3s;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
       }
 
-      [data-tooltip]::before {
-        content: "";
-        position: absolute;
-        top: 120%;
-        left: 50%;
-        transform: translateX(-50%) translateY(-5px) scale(0);
-        border-width: 5px;
-        border-style: solid;
-        border-color: transparent transparent #1e293b transparent;
-        transition: all 0.2s ease;
-        opacity: 0;
-        z-index: 100;
-      }
-
-      [data-tooltip]:hover::after,
-      [data-tooltip]:focus-visible::after,
-      [data-tooltip]:hover::before,
-      [data-tooltip]:focus-visible::before {
-        transform: translateX(-50%) translateY(0) scale(1);
+      .has-tooltip:hover .tooltip-text,
+      .has-tooltip:focus-within .tooltip-text {
+        visibility: visible;
         opacity: 1;
       }
 
-      *:focus-visible {
-        outline: 4px solid #22c55e !important;
-        outline-offset: 4px;
-      }
-
-      @media (prefers-reduced-motion: reduce) {
-        body,
-        .particle,
-        .bounce-in,
-        .btn-play,
-        .energy-pulse {
-          animation: none !important;
-          transition: none !important;
-        }
+      /* Flecha del tooltip */
+      .tooltip-text::after {
+        content: "";
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: transparent transparent #1e293b transparent;
       }
     </style>
   </head>
@@ -226,17 +192,14 @@
     ></div>
 
     <audio id="bgMusic" loop>
-      <source src="music/game-win.mp3" type="audio/mpeg" />
+      <source src="music/bg-home.mp3" type="audio/mpeg" />
     </audio>
 
     <nav
       class="h-[12vh] px-4 md:px-8 flex justify-between items-center max-w-6xl mx-auto w-full z-20"
     >
       <div class="flex items-center gap-2 md:gap-3">
-        <div
-          class="bg-white p-1.5 md:p-2 rounded-xl shadow-lg"
-          aria-hidden="true"
-        >
+        <div class="bg-white p-1.5 md:p-2 rounded-xl shadow-lg">
           <span class="text-2xl md:text-4xl block animate-bounce">🚀</span>
         </div>
         <span
@@ -246,89 +209,94 @@
         </span>
       </div>
 
-      <div class="flex items-center gap-2 md:gap-4 scale-90 md:scale-100">
-        <a
-          href="./pages/nosotros.html"
-          class="bg-white/70 backdrop-blur px-4 py-2 md:px-6 md:py-3 rounded-xl md:rounded-2xl font-bold text-slate-600 border-b-4 border-slate-200 text-sm md:text-base hover:bg-white transition-colors"
-          data-tooltip="Nuestro Equipo"
-          >Nosotros</a
-        >
+      <div class="flex items-center gap-2 md:gap-4">
+        <div class="has-tooltip">
+          <a
+            href="./pages/nosotros.html"
+            class="bg-white/70 backdrop-blur px-3 py-2 md:px-6 md:py-3 rounded-xl font-bold text-slate-600 border-b-4 border-slate-200 text-xs md:text-base hover:bg-white transition-colors"
+          >
+            Nosotros
+          </a>
+          <span class="tooltip-text">Conoce al equipo</span>
+        </div>
 
-        <a
-          href="#"
-          class="bg-yellow-400 px-4 py-2 md:px-6 md:py-3 rounded-xl md:rounded-2xl font-bold text-yellow-900 border-b-4 border-yellow-600 text-sm md:text-base hover:bg-yellow-300 transition-colors"
-          data-tooltip="Cómo Jugar"
-          >Tutorial</a
-        >
-
-        <button
-          onclick="toggleMusic()"
-          id="musicBtn"
-          class="bg-white/90 backdrop-blur w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl shadow-lg text-xl md:text-2xl flex items-center justify-center border-b-4 border-purple-200 cursor-pointer hover:bg-white transition-all active:scale-95"
-          aria-label="Reproducir música"
-          data-tooltip="Sonido"
-        >
-          🔇
-        </button>
+        <div class="has-tooltip">
+          <button
+            onclick="toggleMusic()"
+            id="musicBtn"
+            class="bg-white/90 backdrop-blur w-10 h-10 md:w-12 md:h-12 rounded-xl shadow-lg text-xl flex items-center justify-center border-b-4 border-purple-200 cursor-pointer hover:bg-white active:scale-95 transition-all"
+          >
+            🔇
+          </button>
+          <span class="tooltip-text">Música ON/OFF</span>
+        </div>
       </div>
     </nav>
 
     <main
-      class="flex-grow flex flex-col md:flex-row justify-center items-center px-6 md:px-12 py-8 md:py-0 z-10 gap-8 md:gap-16 max-w-7xl mx-auto w-full"
+      class="flex-grow flex flex-col lg:flex-row justify-center items-center px-6 md:px-12 py-6 lg:py-0 z-10 gap-8 lg:gap-16 max-w-7xl mx-auto w-full"
     >
       <section
-        class="flex-1 bounce-in flex flex-col items-center md:items-start w-full"
+        class="flex-1 bounce-in flex flex-col items-center lg:items-start w-full"
       >
         <h1
-          class="text-4xl md:text-7xl font-black text-slate-900 mb-2 md:mb-4 drop-shadow-sm text-center md:text-left leading-tight"
+          class="text-4xl md:text-6xl lg:text-7xl font-black text-slate-900 mb-2 md:mb-4 text-center lg:text-left leading-tight"
         >
           ¡Hola, <span class="text-purple-600">Estrella</span>!
         </h1>
         <p
-          class="text-lg md:text-2xl text-slate-500 font-bold mb-6 md:mb-8 text-center md:text-left"
+          class="text-lg md:text-2xl text-slate-500 font-bold mb-6 md:mb-8 text-center lg:text-left"
         >
-          Elige tu personaje:
+          Elige tu personaje mágico:
         </p>
 
         <fieldset
-          class="flex gap-4 md:gap-8 justify-center md:justify-start items-center w-full border-none"
+          class="flex flex-wrap lg:flex-nowrap gap-4 md:gap-8 justify-center lg:justify-start items-center w-full border-none"
         >
           <legend class="sr-only">Selecciona tu avatar</legend>
-          <div class="relative">
+
+          <div class="relative has-tooltip">
             <input type="radio" id="boy" name="avatar" class="hidden" checked />
             <label
               for="boy"
+              tabindex="0"
               class="avatar-card cursor-pointer block p-4 md:p-6 bg-white/60 backdrop-blur rounded-3xl text-5xl md:text-7xl shadow-xl"
-              data-tooltip="Niño"
+              onkeydown="handleAvatarKey(event, 'boy')"
               >👦</label
             >
+            <span class="tooltip-text">Elegir Niño</span>
           </div>
-          <div class="relative">
+
+          <div class="relative has-tooltip">
             <input type="radio" id="girl" name="avatar" class="hidden" />
             <label
               for="girl"
+              tabindex="0"
               class="avatar-card cursor-pointer block p-4 md:p-6 bg-white/60 backdrop-blur rounded-3xl text-5xl md:text-7xl shadow-xl"
-              data-tooltip="Niña"
+              onkeydown="handleAvatarKey(event, 'girl')"
               >👧</label
             >
+            <span class="tooltip-text">Elegir Niña</span>
           </div>
-          <div class="relative">
+
+          <div class="relative has-tooltip">
             <input type="radio" id="robot" name="avatar" class="hidden" />
             <label
               for="robot"
+              tabindex="0"
               class="avatar-card cursor-pointer block p-4 md:p-6 bg-white/60 backdrop-blur rounded-3xl text-5xl md:text-7xl shadow-xl"
-              data-tooltip="Robot"
+              onkeydown="handleAvatarKey(event, 'robot')"
               >🤖</label
             >
+            <span class="tooltip-text">Elegir Robot</span>
           </div>
         </fieldset>
       </section>
 
-      <section class="flex-1 flex flex-col items-center gap-8 md:gap-12 w-full">
+      <section class="flex-1 flex flex-col items-center gap-8 lg:gap-12 w-full">
         <div
-          class="w-full max-w-md bg-white/40 backdrop-blur-xl p-6 md:p-8 rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl border-2 border-white/50 bounce-in"
+          class="w-full max-w-sm md:max-w-md bg-white/40 backdrop-blur-xl p-6 md:p-8 rounded-[2.5rem] md:rounded-[3.5rem] shadow-2xl border-2 border-white/50 bounce-in"
           style="animation-delay: 0.2s"
-          role="status"
         >
           <div class="flex justify-between items-end mb-4 px-2">
             <div class="text-left">
@@ -339,7 +307,7 @@
               </p>
               <h2
                 id="energy-label"
-                class="text-xl md:text-3xl font-black text-slate-800"
+                class="text-xl md:text-3xl font-black text-slate-800 transition-opacity duration-300"
               >
                 ¡Cargando!
               </h2>
@@ -348,43 +316,33 @@
               >⚡</span
             >
           </div>
-
           <div
-            class="w-full bg-slate-200/40 h-12 md:h-16 rounded-full p-1.5 md:p-2 shadow-inner relative overflow-hidden"
-            data-tooltip="Cargando diversión"
+            class="w-full bg-slate-200/40 h-10 md:h-16 rounded-full p-1.5 md:p-2 shadow-inner relative overflow-hidden"
           >
             <div
               id="energy-bar"
               class="energy-pulse bg-gradient-to-r from-green-400 via-blue-400 via-purple-500 to-pink-500 h-full rounded-full shadow-lg relative transition-all duration-300"
-            >
-              <div
-                class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/bubbles.png')] opacity-20"
-              ></div>
-            </div>
+            ></div>
           </div>
         </div>
 
         <div
-          class="bounce-in w-full flex justify-center"
+          class="bounce-in w-full flex justify-center pb-10 lg:pb-0 has-tooltip"
           style="animation-delay: 0.4s"
         >
           <a
             href="pages/explorar.html"
-            class="btn-play group text-white text-3xl md:text-5xl font-black w-full md:w-auto text-center px-10 py-6 md:px-20 md:py-10 rounded-[2rem] md:rounded-[3rem] shadow-2xl flex items-center justify-center gap-4 md:gap-6"
-            data-tooltip="¡Comenzar!"
+            class="btn-play text-white text-2xl md:text-5xl font-black w-full md:w-auto text-center px-10 py-6 md:px-20 md:py-10 rounded-[2rem] md:rounded-[3rem] shadow-2xl flex items-center justify-center gap-4"
           >
-            ¡A JUGAR!
-            <span
-              class="group-hover:rotate-12 group-hover:scale-125 transition-transform"
-              >🎮</span
-            >
+            ¡A JUGAR! 🎮
           </a>
+          <span class="tooltip-text">¡Empieza la aventura!</span>
         </div>
       </section>
     </main>
 
     <footer
-      class="h-[8vh] flex items-center justify-center text-slate-500 font-bold text-xs md:text-sm z-10"
+      class="h-[8vh] hidden md:flex items-center justify-center text-slate-500 font-bold text-xs md:text-sm z-10"
     >
       <div class="bg-white/50 backdrop-blur px-6 py-2 rounded-full shadow-sm">
         ✨ ¡Prepárate para la aventura! ✨
@@ -392,8 +350,29 @@
     </footer>
 
     <script>
+      const audio = document.getElementById("bgMusic");
+      const musicBtn = document.getElementById("musicBtn");
+
+      function toggleMusic() {
+        if (audio.paused) {
+          audio.play().catch((e) => console.log("Interacción requerida"));
+          musicBtn.innerText = "🔊";
+        } else {
+          audio.pause();
+          musicBtn.innerText = "🔇";
+        }
+      }
+
+      function handleAvatarKey(event, id) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          document.getElementById(id).checked = true;
+        }
+      }
+
       const container = document.getElementById("particles-container");
-      for (let i = 0; i < 12; i++) {
+      const particleCount = window.innerWidth < 768 ? 6 : 12;
+      for (let i = 0; i < particleCount; i++) {
         const particle = document.createElement("div");
         particle.className = "particle";
         const size = Math.random() * 20 + 10 + "px";
@@ -403,21 +382,6 @@
         particle.style.animationDuration = Math.random() * 5 + 5 + "s";
         particle.style.animationDelay = Math.random() * 5 + "s";
         container.appendChild(particle);
-      }
-
-      const audio = document.getElementById("bgMusic");
-      const musicBtn = document.getElementById("musicBtn");
-
-      function toggleMusic() {
-        if (audio.paused) {
-          audio.play();
-          musicBtn.innerText = "🔊";
-          musicBtn.setAttribute("data-tooltip", "Silenciar");
-        } else {
-          audio.pause();
-          musicBtn.innerText = "🔇";
-          musicBtn.setAttribute("data-tooltip", "Música");
-        }
       }
 
       const label = document.getElementById("energy-label");
