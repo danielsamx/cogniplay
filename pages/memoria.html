@@ -438,7 +438,7 @@
           (val) =>
             `../images/${
               transportes.includes(val) ? "transportes" : "animales"
-            }/${val}.webp`,
+            }/${val}.png`,
         );
         preloadImages(imagesToPreload);
         const cardValues = [...selected, ...selected].sort(
@@ -466,7 +466,7 @@
             <div class="card-inner shadow-lg rounded-xl sm:rounded-2xl">
               <div class="backface-hidden absolute inset-0 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl sm:rounded-2xl flex items-center justify-center text-2xl sm:text-4xl border-2 sm:border-4 border-white shadow-inner text-white font-black">?</div>
               <div class="backface-hidden absolute inset-0 bg-white rounded-xl sm:rounded-2xl flex items-center justify-center [transform:rotateY(180deg)] border-2 border-purple-400 overflow-hidden">
-                <img src="../images/${folder}/${val}.png" alt="${val}" class="w-full h-full object-cover">
+                <img src="../images/${folder}/${val}.png" alt="${val}" class="w-full h-full object-cover" loading="eager">
               </div>
             </div>`;
           card.dataset.value = val;
