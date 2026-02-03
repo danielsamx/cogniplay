@@ -80,7 +80,7 @@
       [data-tooltip]::after {
         content: attr(data-tooltip);
         position: absolute;
-        top: -35px;
+        bottom: -35px;
         left: 50%;
         transform: translateX(-50%) translateY(-10px);
         background: rgba(15, 23, 42, 0.9);
@@ -101,7 +101,7 @@
       [data-tooltip]::before {
         content: "";
         position: absolute;
-        top: -10px;
+        bottom: -10px;
         left: 50%;
         margin-left: -5px;
         border-width: 5px;
@@ -896,6 +896,7 @@
           if (timeLeft <= 0) {
             clearInterval(timerInterval);
             stopAlertSfx();
+            bgMusic.pause(); // Pausar música de fondo
             playSfx("snd-gameover");
             showModal(
               "TIEMPO FUERA",
@@ -911,6 +912,7 @@
       function handleWin() {
         clearInterval(timerInterval);
         stopAlertSfx();
+        bgMusic.pause(); // Pausar música de fondo al ganar
         playSfx("snd-win");
         confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
         showModal(
@@ -920,10 +922,12 @@
           () => {
             if (level < 10) {
               level++;
+              if (isMusicPlaying) bgMusic.play(); // Reanudar música al continuar
               initGame();
             } else {
               level = 1;
               score = 0;
+              if (isMusicPlaying) bgMusic.play(); // Reanudar música al reiniciar
               initGame();
             }
           },
