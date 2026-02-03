@@ -2,10 +2,7 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sopa Mágica - CogniPlay</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -344,7 +341,7 @@
         <div
           id="clues-container"
           class="no-scrollbar"
-          role="list"
+          role="region"
           aria-label="Palabras a encontrar"
           data-arrow-group
         ></div>
@@ -377,7 +374,7 @@
         <div
           id="game-grid"
           class="glass p-3 sm:p-6 rounded-[2.5rem] shadow-2xl grid gap-1.5 w-full max-w-[500px] aspect-square"
-          role="grid"
+          role="region"
           aria-label="Tablero de sopa de letras"
         ></div>
       </section>
@@ -506,6 +503,7 @@
       const modalBody = document.getElementById("modal-body");
       const btnPrimary = document.getElementById("modal-btn-primary");
       const btnSecondary = document.getElementById("modal-btn-secondary");
+      const mainContent = document.querySelector("main");
 
       function initGame() {
         // Limpiar estado previo
@@ -658,7 +656,7 @@
             cell.tabIndex = 0;
             cell.dataset.r = r;
             cell.dataset.c = c;
-            cell.setAttribute("role", "gridcell");
+            cell.setAttribute("role", "button");
             cell.setAttribute("data-tooltip", "Seleccionar");
             cell.innerText =
               board[r][c] ||
@@ -721,7 +719,7 @@
           card.id = `clue-${w.word}`;
           card.className = "clue-card";
           card.tabIndex = 0;
-          card.setAttribute("role", "listitem");
+          card.setAttribute("role", "button");
           card.setAttribute("aria-label", `Pista: ${w.word}`);
           card.setAttribute("data-tooltip", w.word); // Tooltip siempre presente
           card.dataset.clueIndex = index;
@@ -735,7 +733,7 @@
             card.innerHTML = `<span class="text-[10px] font-black text-purple-600 uppercase text-center px-1">${w.word}</span>`;
           } else {
             // Voz
-            card.innerHTML = `<span class="text-2xl" aria-label="Reproducir palabra">🔊</span>`;
+            card.innerHTML = `<span class="text-2xl" aria-hidden="true">🔊</span>`;
           }
 
           // Tap/Touch para mostrar tooltip en móvil
@@ -1043,10 +1041,18 @@
         btnPrimary.innerText = primaryText;
         btnPrimary.onclick = () => {
           modal.classList.add("hidden");
+          if (mainContent) {
+            mainContent.removeAttribute("aria-hidden");
+            mainContent.removeAttribute("inert");
+          }
           primaryAction();
         };
         btnSecondary.classList.toggle("hidden", !showExit);
         modal.classList.remove("hidden");
+        if (mainContent) {
+          mainContent.setAttribute("aria-hidden", "true");
+          mainContent.setAttribute("inert", "");
+        }
         setTimeout(() => btnPrimary.focus(), 100);
       }
 
