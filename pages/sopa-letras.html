@@ -263,6 +263,7 @@
             data-arrow-group
           >
             <a
+              id="nav-back"
               href="explorar.html"
               class="p-1.5 sm:p-2 hover:bg-white rounded-lg transition-all"
               aria-label="Ir al menú de juegos"
@@ -345,6 +346,7 @@
           class="no-scrollbar"
           role="list"
           aria-label="Palabras a encontrar"
+          data-arrow-group
         ></div>
       </aside>
 
@@ -549,11 +551,10 @@
           startTimer();
         }, 300);
 
-        // Dar foco al primer elemento después de renderizar
+        // Dar foco a los controles principales para accesibilidad
         setTimeout(() => {
-          const firstCell = document.querySelector(".letter-cell");
-          if (firstCell) firstCell.focus();
-        }, 600);
+          focusPrimaryControls();
+        }, 200);
       }
 
       function generateBoard() {
@@ -721,6 +722,7 @@
           card.className = "clue-card";
           card.tabIndex = 0;
           card.setAttribute("role", "listitem");
+          card.setAttribute("aria-label", `Pista: ${w.word}`);
           card.setAttribute("data-tooltip", w.word); // Tooltip siempre presente
           card.dataset.clueIndex = index;
 
@@ -796,6 +798,11 @@
           e.preventDefault();
           cards[nextIndex].focus();
         }
+      }
+
+      function focusPrimaryControls() {
+        const firstControl = document.getElementById("nav-back");
+        if (firstControl) firstControl.focus();
       }
 
       function handleStart(cell) {
@@ -1110,3 +1117,10 @@
     </script>
   </body>
 </html>
+
+
+
+
+
+
+
