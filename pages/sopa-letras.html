@@ -80,7 +80,7 @@
       [data-tooltip]::after {
         content: attr(data-tooltip);
         position: absolute;
-        bottom: -35px;
+        top: -35px;
         left: 50%;
         transform: translateX(-50%) translateY(-10px);
         background: rgba(15, 23, 42, 0.9);
@@ -101,7 +101,7 @@
       [data-tooltip]::before {
         content: "";
         position: absolute;
-        bottom: -10px;
+        top: -10px;
         left: 50%;
         margin-left: -5px;
         border-width: 5px;
@@ -418,7 +418,7 @@
       </div>
     </div>
 
-    <audio id="bg-music" loop src="../music/memory-bg.mp3"></audio>
+    <audio id="bg-music" loop src="../music/words-bg.mp3"></audio>
     <audio id="snd-match" src="../music/match.mp3" preload="auto"></audio>
     <audio id="snd-wrong" src="../music/wrong.mp3" preload="auto"></audio>
     <audio id="snd-win" src="../music/game-win.mp3" preload="auto"></audio>
@@ -506,10 +506,26 @@
       const btnSecondary = document.getElementById("modal-btn-secondary");
 
       function initGame() {
+        // Limpiar estado previo
         clearInterval(timerInterval);
         stopAlertSfx();
+        isSelecting = false;
+        startCell = null;
+        selectedCells = [];
+
+        // Resetear progreso del timer
         timeLeft = 100;
+        const timerProgressBar = document.getElementById("timer-progress");
+        timerProgressBar.style.width = "100%";
+        timerProgressBar.classList.remove("bg-red-500");
+
+        // Resetear timer text
+        const timerText = document.getElementById("timer-text");
+        timerText.classList.remove("text-red-500", "animate-bounce");
+        timerText.innerText = "01:40";
+
         updateUI();
+
         const category = level % 2 === 0 ? "transportes" : "animales";
         const pool = category === "transportes" ? transportes : animales;
 
@@ -524,10 +540,16 @@
             mode: Math.floor(Math.random() * 3), // 0: Imagen, 1: Texto, 2: Voz
           }));
 
+        // Generar tablero y pistas
         generateBoard();
         renderClues();
-        startTimer();
 
+        // Iniciar timer después de un pequeño delay
+        setTimeout(() => {
+          startTimer();
+        }, 300);
+
+        // Dar foco al primer elemento después de renderizar
         setTimeout(() => {
           const firstCell = document.querySelector(".letter-cell");
           if (firstCell) firstCell.focus();
@@ -543,33 +565,90 @@
           .fill()
           .map(() => Array(size).fill(""));
 
+        // Colocar palabras con lógica mejorada
         wordsInLevel.forEach((obj) => {
           let placed = false,
             attempts = 0;
-          while (!placed && attempts < 100) {
-            const isH = Math.random() > 0.5;
-            const r = Math.floor(
-              Math.random() * (isH ? size : size - obj.word.length),
-            );
-            const c = Math.floor(
-              Math.random() * (isH ? size - obj.word.length : size),
-            );
+          while (!placed && attempts < 200) {
+            // Aumentar intentos
+            const directions = [
+              { dr: 0, dc: 1 }, // Horizontal derecha
+              { dr: 1, dc: 0 }, // Vertical abajo
+              { dr: 1, dc: 1 }, // Diagonal abajo-derecha
+              { dr: 1, dc: -1 }, // Diagonal abajo-izquierda
+            ];
+
+            const dir =
+              directions[Math.floor(Math.random() * directions.length)];
+
+            // Calcular límites según la dirección
+            const maxR = dir.dr === 0 ? size : size - obj.word.length;
+            const maxC =
+              dir.dc === 0
+                ? size
+                : dir.dc === 1
+                  ? size - obj.word.length
+                  : obj.word.length;
+
+            if (maxR <= 0 || maxC <= 0) {
+              attempts++;
+              continue;
+            }
+
+            const r = Math.floor(Math.random() * maxR);
+            const c =
+              dir.dc === -1
+                ? Math.floor(Math.random() * (size - maxC)) + maxC
+                : Math.floor(Math.random() * maxC);
+
             let canPlace = true;
+
+            // Verificar si se puede colocar (permitir solapamiento de letras coincidentes)
             for (let i = 0; i < obj.word.length; i++) {
-              if (board[r + (isH ? 0 : i)][c + (isH ? i : 0)] !== "") {
+              const newR = r + i * dir.dr;
+              const newC = c + i * dir.dc;
+
+              if (newR < 0 || newR >= size || newC < 0 || newC >= size) {
+                canPlace = false;
+                break;
+              }
+
+              const currentCell = board[newR][newC];
+              // Permitir si está vacío o es la misma letra
+              if (currentCell !== "" && currentCell !== obj.word[i]) {
                 canPlace = false;
                 break;
               }
             }
+
             if (canPlace) {
-              for (let i = 0; i < obj.word.length; i++)
-                board[r + (isH ? 0 : i)][c + (isH ? i : 0)] = obj.word[i];
+              // Colocar la palabra
+              for (let i = 0; i < obj.word.length; i++) {
+                const newR = r + i * dir.dr;
+                const newC = c + i * dir.dc;
+                board[newR][newC] = obj.word[i];
+              }
               placed = true;
             }
             attempts++;
           }
+
+          // Si no se pudo colocar después de muchos intentos, forzar colocación horizontal
+          if (!placed) {
+            console.warn(
+              `No se pudo colocar la palabra ${obj.word}, forzando colocación`,
+            );
+            const r = Math.floor(Math.random() * size);
+            const c = Math.floor(
+              Math.random() * Math.max(1, size - obj.word.length),
+            );
+            for (let i = 0; i < obj.word.length && c + i < size; i++) {
+              board[r][c + i] = obj.word[i];
+            }
+          }
         });
 
+        // Rellenar espacios vacíos con letras aleatorias
         for (let r = 0; r < size; r++) {
           for (let c = 0; c < size; c++) {
             const cell = document.createElement("div");
@@ -816,7 +895,10 @@
           );
         } else {
           grid.classList.remove("paused-grid");
-          if (isMusicPlaying) bgMusic.play();
+          if (isMusicPlaying) {
+            bgMusic.volume = 0.1; // Volumen suave al reanudar
+            bgMusic.play();
+          }
           if (isAlertActive) sndAlert.play();
           startTimer();
         }
@@ -837,6 +919,7 @@
         );
 
         if (isMusicPlaying && gameStarted && !isPaused) {
+          bgMusic.volume = 0.3; // Volumen más suave (30%)
           bgMusic.play().catch(() => {});
         } else {
           bgMusic.pause();
@@ -855,7 +938,7 @@
       function stopAlertSfx() {
         sndAlert.pause();
         sndAlert.currentTime = 0;
-        bgMusic.volume = 1.0;
+        bgMusic.volume = 0.3; // Restaurar volumen suave
         isAlertActive = false;
         document
           .getElementById("timer-text")
@@ -889,7 +972,7 @@
               .classList.add("text-red-500", "animate-bounce");
             if (isMusicPlaying) {
               playSfx("snd-alert");
-              bgMusic.volume = 0.4;
+              bgMusic.volume = 0.15; // Reducir aún más cuando suena la alerta
             }
           }
 
@@ -922,12 +1005,18 @@
           () => {
             if (level < 10) {
               level++;
-              if (isMusicPlaying) bgMusic.play(); // Reanudar música al continuar
+              if (isMusicPlaying) {
+                bgMusic.volume = 0.3; // Volumen suave al reanudar
+                bgMusic.play();
+              }
               initGame();
             } else {
               level = 1;
               score = 0;
-              if (isMusicPlaying) bgMusic.play(); // Reanudar música al reiniciar
+              if (isMusicPlaying) {
+                bgMusic.volume = 0.3; // Volumen suave al reiniciar
+                bgMusic.play();
+              }
               initGame();
             }
           },
