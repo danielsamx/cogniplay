@@ -120,7 +120,10 @@
     <div class="blob"></div>
     <div class="blob" style="animation-delay: -10s; right: 0; top: 0"></div>
 
-    <nav class="h-[10vh] flex items-center max-w-6xl mx-auto w-full z-10">
+    <nav
+      class="h-[10vh] flex items-center max-w-6xl mx-auto w-full z-10"
+      data-arrow-group
+    >
       <a
         href="../index.html"
         class="bg-white/90 px-6 py-3 rounded-2xl font-black text-purple-600 shadow-xl hover:bg-purple-600 hover:text-white transition-all flex items-center gap-3 active:scale-95"
@@ -255,6 +258,44 @@
           `;
         });
       });
+
+      function enableArrowGroups(root = document) {
+        root.querySelectorAll("[data-arrow-group]").forEach((group) => {
+          group.addEventListener("keydown", (event) => {
+            const keys = ["ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp"];
+            if (!keys.includes(event.key)) return;
+            const target = event.target;
+            if (
+              target.tagName === "INPUT" ||
+              target.tagName === "TEXTAREA" ||
+              target.tagName === "SELECT"
+            )
+              return;
+            const items = Array.from(
+              group.querySelectorAll(
+                'a,button,summary,[role="radio"],[tabindex="0"]',
+              ),
+            ).filter(
+              (el) =>
+                !el.hasAttribute("disabled") &&
+                el.getAttribute("tabindex") !== "-1",
+            );
+            const index = items.indexOf(target);
+            if (index < 0) return;
+            let nextIndex = index;
+            if (event.key === "ArrowRight" || event.key === "ArrowDown")
+              nextIndex = index + 1;
+            if (event.key === "ArrowLeft" || event.key === "ArrowUp")
+              nextIndex = index - 1;
+            if (nextIndex !== index && items[nextIndex]) {
+              event.preventDefault();
+              items[nextIndex].focus();
+            }
+          });
+        });
+      }
+
+      enableArrowGroups();
     </script>
   </body>
 </html>

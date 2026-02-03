@@ -140,6 +140,11 @@
         box-shadow: 0 15px 30px rgba(139, 92, 246, 0.3);
       }
 
+      input[type="radio"]:focus + label {
+        outline: 3px solid #8b5cf6;
+        outline-offset: 4px;
+      }
+
       /* TOOLTIP CUSTOM SYSTEM */
       .has-tooltip {
         position: relative;
@@ -213,7 +218,7 @@
         </span>
       </div>
 
-      <div class="flex items-center gap-2 md:gap-4">
+      <div class="flex items-center gap-2 md:gap-4" data-arrow-group>
         <div class="has-tooltip">
           <a
             href="./pages/nosotros.html"
@@ -225,9 +230,22 @@
         </div>
 
         <div class="has-tooltip">
+          <a
+            href="./pages/ayuda.html"
+            class="bg-white/70 backdrop-blur px-3 py-2 md:px-6 md:py-3 rounded-xl font-bold text-slate-600 border-b-4 border-slate-200 text-xs md:text-base hover:bg-white transition-colors"
+          >
+            Ayuda
+          </a>
+          <span class="tooltip-text">Tutorial</span>
+        </div>
+
+        <div class="has-tooltip">
           <button
             onclick="toggleMusic()"
             id="musicBtn"
+            aria-label="Musica"
+            aria-pressed="false"
+            type="button"
             class="bg-white/90 backdrop-blur w-10 h-10 md:w-12 md:h-12 rounded-xl shadow-lg text-xl flex items-center justify-center border-b-4 border-purple-200 cursor-pointer hover:bg-white active:scale-95 transition-all"
           >
             🔇
@@ -255,41 +273,45 @@
         </p>
 
         <fieldset
+          data-arrow-group
           class="flex flex-wrap lg:flex-nowrap gap-4 md:gap-8 justify-center lg:justify-start items-center w-full border-none"
         >
           <legend class="sr-only">Selecciona tu avatar</legend>
 
           <div class="relative has-tooltip">
-            <input type="radio" id="boy" name="avatar" class="hidden" checked />
+            <input
+              type="radio"
+              id="boy"
+              name="avatar"
+              class="sr-only"
+              checked
+            />
             <label
               for="boy"
-              tabindex="0"
               class="avatar-card cursor-pointer block p-4 md:p-6 bg-white/60 backdrop-blur rounded-3xl text-5xl md:text-7xl shadow-xl"
-              onkeydown="handleAvatarKey(event, 'boy')"
+              aria-label="Elegir niño"
               >👦</label
             >
             <span class="tooltip-text">Elegir Niño</span>
           </div>
 
           <div class="relative has-tooltip">
-            <input type="radio" id="girl" name="avatar" class="hidden" />
+            <input type="radio" id="girl" name="avatar" class="sr-only" />
             <label
               for="girl"
-              tabindex="0"
               class="avatar-card cursor-pointer block p-4 md:p-6 bg-white/60 backdrop-blur rounded-3xl text-5xl md:text-7xl shadow-xl"
-              onkeydown="handleAvatarKey(event, 'girl')"
+              aria-label="Elegir niña"
               >👧</label
             >
             <span class="tooltip-text">Elegir Niña</span>
           </div>
 
           <div class="relative has-tooltip">
-            <input type="radio" id="robot" name="avatar" class="hidden" />
+            <input type="radio" id="robot" name="avatar" class="sr-only" />
             <label
               for="robot"
-              tabindex="0"
               class="avatar-card cursor-pointer block p-4 md:p-6 bg-white/60 backdrop-blur rounded-3xl text-5xl md:text-7xl shadow-xl"
-              onkeydown="handleAvatarKey(event, 'robot')"
+              aria-label="Elegir robot"
               >🤖</label
             >
             <span class="tooltip-text">Elegir Robot</span>
@@ -337,6 +359,7 @@
           <a
             href="pages/explorar.html"
             class="btn-play text-white text-2xl md:text-5xl font-black w-full md:w-auto text-center px-10 py-6 md:px-20 md:py-10 rounded-[2rem] md:rounded-[3rem] shadow-2xl flex items-center justify-center gap-4"
+            aria-label="A jugar, explorar juegos"
           >
             ¡A JUGAR! 🎮
           </a>
@@ -361,16 +384,13 @@
         if (audio.paused) {
           audio.play().catch((e) => console.log("Interacción requerida"));
           musicBtn.innerText = "🔊";
+          musicBtn.setAttribute("aria-pressed", "true");
+          musicBtn.setAttribute("aria-label", "Desactivar musica");
         } else {
           audio.pause();
           musicBtn.innerText = "🔇";
-        }
-      }
-
-      function handleAvatarKey(event, id) {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          document.getElementById(id).checked = true;
+          musicBtn.setAttribute("aria-pressed", "false");
+          musicBtn.setAttribute("aria-label", "Activar musica");
         }
       }
 
@@ -408,6 +428,44 @@
           label.style.opacity = 1;
         }, 300);
       }, 3000);
+
+      function enableArrowGroups(root = document) {
+        root.querySelectorAll("[data-arrow-group]").forEach((group) => {
+          group.addEventListener("keydown", (event) => {
+            const keys = ["ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp"];
+            if (!keys.includes(event.key)) return;
+            const target = event.target;
+            if (
+              target.tagName === "INPUT" ||
+              target.tagName === "TEXTAREA" ||
+              target.tagName === "SELECT"
+            )
+              return;
+            const items = Array.from(
+              group.querySelectorAll(
+                'a,button,summary,[role="radio"],[tabindex="0"]',
+              ),
+            ).filter(
+              (el) =>
+                !el.hasAttribute("disabled") &&
+                el.getAttribute("tabindex") !== "-1",
+            );
+            const index = items.indexOf(target);
+            if (index < 0) return;
+            let nextIndex = index;
+            if (event.key === "ArrowRight" || event.key === "ArrowDown")
+              nextIndex = index + 1;
+            if (event.key === "ArrowLeft" || event.key === "ArrowUp")
+              nextIndex = index - 1;
+            if (nextIndex !== index && items[nextIndex]) {
+              event.preventDefault();
+              items[nextIndex].focus();
+            }
+          });
+        });
+      }
+
+      enableArrowGroups();
     </script>
   </body>
 </html>

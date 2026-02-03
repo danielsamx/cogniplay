@@ -126,8 +126,13 @@
             >
           </div>
           <div class="h-6 sm:h-8 w-[1px] bg-slate-200 mx-1"></div>
-          <div class="flex gap-1 bg-slate-100 p-1 rounded-xl">
+          <div
+            id="top-controls"
+            data-arrow-group
+            class="flex gap-1 bg-slate-100 p-1 rounded-xl"
+          >
             <a
+              id="nav-back"
               href="explorar.html"
               class="p-1.5 sm:p-2 hover:bg-white rounded-lg transition-all"
               data-tooltip="Ir a juegos"
@@ -135,12 +140,25 @@
               >🎮</a
             >
             <button
+              id="nav-pause"
               onclick="togglePause()"
               class="p-1.5 sm:p-2 hover:bg-white rounded-lg transition-all"
               data-tooltip="Pausar juego"
-              aria-label="Pausar cronómetro"
+              aria-label="Pausar cronometro"
+              aria-pressed="false"
+              type="button"
             >
               ⏸️
+            </button>
+            <button
+              id="music-toggle"
+              class="p-1.5 sm:p-2 hover:bg-white rounded-lg transition-all"
+              data-tooltip="Sonido ON/OFF"
+              aria-label="Activar musica de fondo"
+              aria-pressed="false"
+              type="button"
+            >
+              🔇
             </button>
           </div>
         </div>
@@ -161,6 +179,8 @@
               <span
                 id="level-display"
                 class="text-sm sm:text-lg font-black leading-none"
+                aria-live="polite"
+                aria-atomic="true"
                 >1</span
               >
             </div>
@@ -174,6 +194,8 @@
               <span
                 id="score-display"
                 class="text-sm sm:text-lg font-black leading-none text-slate-700"
+                aria-live="polite"
+                aria-atomic="true"
                 >0</span
               >
             </div>
@@ -218,6 +240,8 @@
       class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4"
       role="dialog"
       aria-modal="true"
+      aria-labelledby="modal-title"
+      aria-describedby="modal-body"
     >
       <div
         id="modal-content"
@@ -248,15 +272,6 @@
       </div>
     </div>
 
-    <button
-      id="music-toggle"
-      class="fixed bottom-4 right-4 w-12 h-12 glass rounded-full shadow-2xl flex items-center justify-center text-xl z-40"
-      data-tooltip="Sonido ON/OFF"
-      aria-label="Alternar música de fondo"
-    >
-      🔇
-    </button>
-
     <audio id="bg-music" loop src="../music/memory-bg.mp3"></audio>
     <audio
       id="snd-flip"
@@ -282,6 +297,12 @@
         isAlertActive = false;
 
       const grid = document.getElementById("game-grid");
+
+      const getCardColumns = () => {
+        const columns = getComputedStyle(grid).gridTemplateColumns;
+        const count = columns ? columns.split(" ").length : 1;
+        return Math.max(1, count);
+      };
       const levelDisplay = document.getElementById("level-display");
       const scoreDisplay = document.getElementById("score-display");
       const timerProgress = document.getElementById("timer-progress");
@@ -357,23 +378,37 @@
 
       function setDifficulty(val, el) {
         difficulty = val;
-        document
-          .querySelectorAll(".btn-difficulty")
-          .forEach((b) => b.classList.remove("btn-active"));
+        document.querySelectorAll(".btn-difficulty").forEach((b) => {
+          b.classList.remove("btn-active");
+          b.setAttribute("aria-checked", "false");
+        });
         el.classList.add("btn-active");
+        el.setAttribute("aria-checked", "true");
       }
 
       function setCategory(val, el) {
         category = val;
-        document
-          .querySelectorAll(".btn-category")
-          .forEach((b) => b.classList.remove("btn-active"));
+        document.querySelectorAll(".btn-category").forEach((b) => {
+          b.classList.remove("btn-active");
+          b.setAttribute("aria-checked", "false");
+        });
         el.classList.add("btn-active");
+        el.setAttribute("aria-checked", "true");
       }
 
       musicBtn.onclick = () => {
         isMusicPlaying ? bgMusic.pause() : bgMusic.play();
         musicBtn.innerText = isMusicPlaying ? "🔇" : "🎵";
+        musicBtn.setAttribute(
+          "aria-pressed",
+          isMusicPlaying ? "false" : "true",
+        );
+        musicBtn.setAttribute(
+          "aria-label",
+          isMusicPlaying
+            ? "Activar musica de fondo"
+            : "Desactivar musica de fondo",
+        );
         isMusicPlaying = !isMusicPlaying;
       };
 
@@ -403,6 +438,22 @@
       ) {
         modalTitle.innerText = title;
         modalBody.innerHTML = bodyHTML;
+        modalBody.querySelectorAll('[role="radiogroup"]').forEach((group) => {
+          const buttons = Array.from(group.querySelectorAll("button"));
+          buttons.forEach((button, index) => {
+            button.addEventListener("keydown", (event) => {
+              let nextIndex = index;
+              if (event.key === "ArrowRight" || event.key === "ArrowDown")
+                nextIndex = index + 1;
+              if (event.key === "ArrowLeft" || event.key === "ArrowUp")
+                nextIndex = index - 1;
+              if (nextIndex !== index && buttons[nextIndex]) {
+                event.preventDefault();
+                buttons[nextIndex].focus();
+              }
+            });
+          });
+        });
         btnPrimary.innerText = primaryText;
         btnPrimary.onclick = () => {
           modal.classList.add("hidden");
@@ -410,7 +461,8 @@
         };
         btnSecondary.classList.toggle("hidden", !showExit);
         modal.classList.remove("hidden");
-        setTimeout(() => btnPrimary.focus(), 100);
+        const firstOption = modalBody.querySelector(".btn-difficulty");
+        setTimeout(() => (firstOption || btnPrimary).focus(), 100);
       }
 
       function initGame() {
@@ -438,7 +490,7 @@
           (val) =>
             `../images/${
               transportes.includes(val) ? "transportes" : "animales"
-            }/${val}.webp`,
+            }/${val}.png`,
         );
         preloadImages(imagesToPreload);
         const cardValues = [...selected, ...selected].sort(
@@ -450,7 +502,9 @@
             ? "grid-cols-2 sm:grid-cols-4"
             : "grid-cols-4 sm:grid-cols-6";
         grid.className = `grid gap-2 sm:gap-3 justify-items-center ${cols}`;
+        grid.setAttribute("data-arrow-group", "");
 
+        let firstCard = null;
         cardValues.forEach((val, index) => {
           const card = document.createElement("button");
           const sizeClass =
@@ -458,21 +512,45 @@
               ? "w-16 h-24 sm:w-24 sm:h-32"
               : "w-20 h-28 sm:w-28 sm:h-36";
           card.className = `card ${sizeClass} cursor-pointer perspective-1000`;
+          card.type = "button";
+          card.dataset.index = `${index + 1}`;
           card.setAttribute("aria-label", `Carta ${index + 1}`);
           card.setAttribute("data-tooltip", "Revelar");
+          card.tabIndex = -1;
 
           const folder = transportes.includes(val) ? "transportes" : "animales";
           card.innerHTML = `
             <div class="card-inner shadow-lg rounded-xl sm:rounded-2xl">
               <div class="backface-hidden absolute inset-0 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl sm:rounded-2xl flex items-center justify-center text-2xl sm:text-4xl border-2 sm:border-4 border-white shadow-inner text-white font-black">?</div>
               <div class="backface-hidden absolute inset-0 bg-white rounded-xl sm:rounded-2xl flex items-center justify-center [transform:rotateY(180deg)] border-2 border-purple-400 overflow-hidden">
-                <img src="../images/${folder}/${val}.webp" alt="${val}" class="w-full h-full object-cover" loading="eager">
+                <img src="../images/${folder}/${val}.png" alt="${val}" class="w-full h-full object-cover" loading="eager">
               </div>
             </div>`;
           card.dataset.value = val;
           card.onclick = () => flipCard(card);
+          card.addEventListener("keydown", (event) => {
+            const cards = Array.from(grid.querySelectorAll(".card"));
+            const index = cards.indexOf(card);
+            if (index < 0) return;
+            const columns = getCardColumns();
+            let nextIndex = index;
+
+            if (event.key === "ArrowRight") nextIndex = index + 1;
+            if (event.key === "ArrowLeft") nextIndex = index - 1;
+            if (event.key === "ArrowDown") nextIndex = index + columns;
+            if (event.key === "ArrowUp") nextIndex = index - columns;
+
+            if (nextIndex !== index && cards[nextIndex]) {
+              event.preventDefault();
+              card.tabIndex = -1;
+              cards[nextIndex].tabIndex = 0;
+              cards[nextIndex].focus();
+            }
+          });
           grid.appendChild(card);
+          if (!firstCard) firstCard = card;
         });
+        if (firstCard) firstCard.tabIndex = 0;
 
         setTimeout(() => {
           document
@@ -489,6 +567,9 @@
             Math.max(1200, 2200 - level * 100),
           );
         }, 300);
+
+        const backBtn = document.getElementById("nav-back");
+        if (backBtn) backBtn.focus();
       }
 
       function startTimer(resume = false) {
@@ -533,6 +614,10 @@
         playSnd("snd-flip");
         card.classList.add("flipped");
         card.removeAttribute("data-tooltip");
+        card.setAttribute(
+          "aria-label",
+          `Carta ${card.dataset.index}: ${card.dataset.value}`,
+        );
         flippedCards.push(card);
         if (flippedCards.length === 2) {
           canFlip = false;
@@ -547,6 +632,14 @@
           matchedPairs++;
           score += level * 100;
           updateUI();
+          c1.setAttribute(
+            "aria-label",
+            `Carta ${c1.dataset.index} emparejada: ${c1.dataset.value}`,
+          );
+          c2.setAttribute(
+            "aria-label",
+            `Carta ${c2.dataset.index} emparejada: ${c2.dataset.value}`,
+          );
           flippedCards = [];
           canFlip = true;
           if (matchedPairs === document.querySelectorAll(".card").length / 2)
@@ -558,6 +651,8 @@
             c2.classList.remove("flipped");
             c1.setAttribute("data-tooltip", "Revelar");
             c2.setAttribute("data-tooltip", "Revelar");
+            c1.setAttribute("aria-label", `Carta ${c1.dataset.index}`);
+            c2.setAttribute("aria-label", `Carta ${c2.dataset.index}`);
             flippedCards = [];
             canFlip = true;
           }, 800);
@@ -619,6 +714,16 @@
       function togglePause() {
         if (!canFlip && !isPaused) return;
         isPaused = !isPaused;
+        const pauseBtn = document.querySelector(
+          'button[onclick="togglePause()"]',
+        );
+        if (pauseBtn) {
+          pauseBtn.setAttribute("aria-pressed", isPaused ? "true" : "false");
+          pauseBtn.setAttribute(
+            "aria-label",
+            isPaused ? "Reanudar cronometro" : "Pausar cronometro",
+          );
+        }
         if (isPaused) {
           clearInterval(timerInterval);
           bgMusic.pause();
@@ -639,24 +744,69 @@
         }
       }
 
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          togglePause();
+        }
+      });
+
+      function enableArrowGroups(root = document) {
+        root.querySelectorAll("[data-arrow-group]").forEach((group) => {
+          group.addEventListener("keydown", (event) => {
+            const keys = ["ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp"];
+            if (!keys.includes(event.key)) return;
+            const target = event.target;
+            if (
+              target.tagName === "INPUT" ||
+              target.tagName === "TEXTAREA" ||
+              target.tagName === "SELECT"
+            )
+              return;
+            const items = Array.from(
+              group.querySelectorAll(
+                'a,button,summary,[role="radio"],[tabindex="0"]',
+              ),
+            ).filter(
+              (el) =>
+                !el.hasAttribute("disabled") &&
+                el.getAttribute("tabindex") !== "-1",
+            );
+            const index = items.indexOf(target);
+            if (index < 0) return;
+            let nextIndex = index;
+            if (event.key === "ArrowRight" || event.key === "ArrowDown")
+              nextIndex = index + 1;
+            if (event.key === "ArrowLeft" || event.key === "ArrowUp")
+              nextIndex = index - 1;
+            if (nextIndex !== index && items[nextIndex]) {
+              event.preventDefault();
+              items[nextIndex].focus();
+            }
+          });
+        });
+      }
+
+      enableArrowGroups();
+
       window.onload = () => {
         showModal(
           "COGNIPLAY",
           `<div class="text-left space-y-4">
             <div>
               <p class="font-black text-[10px] mb-2 text-purple-500 uppercase">Dificultad</p>
-              <div class="flex gap-2" role="radiogroup">
-                <button onclick="setDifficulty('facil', this)" class="btn-difficulty glass flex-1 py-2 rounded-xl font-bold text-sm" data-tooltip="Modo Relax">Fácil</button>
-                <button onclick="setDifficulty('medio', this)" class="btn-difficulty glass flex-1 py-2 rounded-xl font-bold btn-active text-sm" data-tooltip="Modo Estándar">Medio</button>
-                <button onclick="setDifficulty('dificil', this)" class="btn-difficulty glass flex-1 py-2 rounded-xl font-bold text-sm" data-tooltip="Modo Experto">Difícil</button>
+              <div class="flex gap-2" role="radiogroup" aria-label="Dificultad">
+                <button onclick="setDifficulty('facil', this)" class="btn-difficulty glass flex-1 py-2 rounded-xl font-bold text-sm" data-tooltip="Modo Relax" role="radio" aria-checked="false">Fácil</button>
+                <button onclick="setDifficulty('medio', this)" class="btn-difficulty glass flex-1 py-2 rounded-xl font-bold btn-active text-sm" data-tooltip="Modo Estándar" role="radio" aria-checked="true">Medio</button>
+                <button onclick="setDifficulty('dificil', this)" class="btn-difficulty glass flex-1 py-2 rounded-xl font-bold text-sm" data-tooltip="Modo Experto" role="radio" aria-checked="false">Difícil</button>
               </div>
             </div>
             <div>
               <p class="font-black text-[10px] mb-2 text-purple-500 uppercase">Temática</p>
-              <div class="flex gap-2" role="radiogroup">
-                <button onclick="setCategory('animales', this)" class="btn-category glass flex-1 py-2 rounded-xl font-bold btn-active text-sm" data-tooltip="Naturaleza">Animales</button>
-                <button onclick="setCategory('transportes', this)" class="btn-category glass flex-1 py-2 rounded-xl font-bold text-sm" data-tooltip="Aventuras">Transportes</button>
-                <button onclick="setCategory('mixto', this)" class="btn-category glass flex-1 py-2 rounded-xl font-bold text-sm" data-tooltip="Todo junto">Mixto</button>
+              <div class="flex gap-2" role="radiogroup" aria-label="Tematica">
+                <button onclick="setCategory('animales', this)" class="btn-category glass flex-1 py-2 rounded-xl font-bold btn-active text-sm" data-tooltip="Naturaleza" role="radio" aria-checked="true">Animales</button>
+                <button onclick="setCategory('transportes', this)" class="btn-category glass flex-1 py-2 rounded-xl font-bold text-sm" data-tooltip="Aventuras" role="radio" aria-checked="false">Transportes</button>
+                <button onclick="setCategory('mixto', this)" class="btn-category glass flex-1 py-2 rounded-xl font-bold text-sm" data-tooltip="Todo junto" role="radio" aria-checked="false">Mixto</button>
               </div>
             </div>
           </div>`,

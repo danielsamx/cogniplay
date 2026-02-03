@@ -7,9 +7,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   </head>
   <body class="bg-[#FFFBEB] min-h-screen font-sans text-slate-700">
-    <nav class="p-6 max-w-4xl mx-auto flex items-center">
+    <nav class="p-6 max-w-4xl mx-auto flex items-center" data-arrow-group>
       <a
-        href="inicio.html"
+        href="../index.html"
         class="text-slate-500 font-bold hover:text-orange-600"
         >← Volver</a
       >
@@ -23,7 +23,7 @@
         Es normal tener dudas, ¡estamos aquí para ti!
       </p>
 
-      <div class="space-y-4">
+      <div class="space-y-4" data-arrow-group>
         <details
           class="group bg-white rounded-3xl shadow-sm border-2 border-orange-100 overflow-hidden"
           open
@@ -68,6 +68,7 @@
 
       <div
         class="mt-12 p-8 bg-orange-100 rounded-[3rem] border-2 border-dashed border-orange-300"
+        data-arrow-group
       >
         <h3 class="font-black text-orange-800 mb-2 text-xl">
           ¿Todavía tienes dudas?
@@ -82,5 +83,45 @@
         </button>
       </div>
     </main>
+
+    <script>
+      function enableArrowGroups(root = document) {
+        root.querySelectorAll("[data-arrow-group]").forEach((group) => {
+          group.addEventListener("keydown", (event) => {
+            const keys = ["ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp"];
+            if (!keys.includes(event.key)) return;
+            const target = event.target;
+            if (
+              target.tagName === "INPUT" ||
+              target.tagName === "TEXTAREA" ||
+              target.tagName === "SELECT"
+            )
+              return;
+            const items = Array.from(
+              group.querySelectorAll(
+                'a,button,summary,[role="radio"],[tabindex="0"]',
+              ),
+            ).filter(
+              (el) =>
+                !el.hasAttribute("disabled") &&
+                el.getAttribute("tabindex") !== "-1",
+            );
+            const index = items.indexOf(target);
+            if (index < 0) return;
+            let nextIndex = index;
+            if (event.key === "ArrowRight" || event.key === "ArrowDown")
+              nextIndex = index + 1;
+            if (event.key === "ArrowLeft" || event.key === "ArrowUp")
+              nextIndex = index - 1;
+            if (nextIndex !== index && items[nextIndex]) {
+              event.preventDefault();
+              items[nextIndex].focus();
+            }
+          });
+        });
+      }
+
+      enableArrowGroups();
+    </script>
   </body>
 </html>

@@ -198,10 +198,13 @@
         <span class="custom-tooltip">Ir al inicio</span>
       </div>
 
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3" data-arrow-group>
         <div class="tooltip-container">
           <button
             id="music-toggle"
+            aria-label="Musica"
+            aria-pressed="false"
+            type="button"
             class="w-12 h-12 bg-white rounded-full shadow-lg border-2 border-purple-100 flex items-center justify-center text-xl hover:scale-110 focus-visible:ring-4 focus-visible:ring-purple-400 outline-none cursor-pointer transition-transform"
           >
             🔇
@@ -215,17 +218,22 @@
       class="min-h-[88vh] flex flex-col justify-center items-center px-4 py-6 md:py-0"
     >
       <header class="text-center mb-10">
-        <h1
-          id="animated-title"
-          class="text-4xl md:text-6xl font-black text-slate-900 mb-2"
-        ></h1>
+        <h1 class="text-4xl md:text-6xl font-black text-slate-900 mb-2">
+          <span class="sr-only">Gimnasio Mental</span>
+          <span id="animated-title" aria-hidden="true"></span>
+        </h1>
       </header>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-4xl w-full px-2">
+      <div
+        id="games-grid"
+        data-arrow-group
+        class="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-4xl w-full px-2"
+      >
         <div class="tooltip-container">
           <a
             href="sopa-letras.html"
-            class="game-card group bg-white/70 backdrop-blur-xl rounded-[2.5rem] p-8 border-2 border-white shadow-xl flex flex-col items-center text-center bounce-in w-full"
+            class="game-card kbd-item group bg-white/70 backdrop-blur-xl rounded-[2.5rem] p-8 border-2 border-white shadow-xl flex flex-col items-center text-center bounce-in w-full"
+            aria-label="Ojo de Halcón, sopa de letras"
             style="animation-delay: 0.1s"
           >
             <div class="relative mb-6">
@@ -271,7 +279,8 @@
         <div class="tooltip-container">
           <a
             href="memoria.html"
-            class="game-card group bg-white/70 backdrop-blur-xl rounded-[2.5rem] p-8 border-2 border-white shadow-xl flex flex-col items-center text-center bounce-in w-full"
+            class="game-card kbd-item group bg-white/70 backdrop-blur-xl rounded-[2.5rem] p-8 border-2 border-white shadow-xl flex flex-col items-center text-center bounce-in w-full"
+            aria-label="Mente de rayo, juego de memoria"
             style="animation-delay: 0.2s"
           >
             <div class="relative mb-6">
@@ -369,13 +378,54 @@
           music.pause();
           musicBtn.innerText = "🔇";
           musicTooltip.innerText = "Activar música";
+          musicBtn.setAttribute("aria-pressed", "false");
+          musicBtn.setAttribute("aria-label", "Activar musica");
         } else {
           music.play().catch(() => {});
           musicBtn.innerText = "🔊";
           musicTooltip.innerText = "Desactivar música";
+          musicBtn.setAttribute("aria-pressed", "true");
+          musicBtn.setAttribute("aria-label", "Desactivar musica");
         }
         isPlaying = !isPlaying;
       });
+      function enableArrowGroups(root = document) {
+        root.querySelectorAll("[data-arrow-group]").forEach((group) => {
+          group.addEventListener("keydown", (event) => {
+            const keys = ["ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp"];
+            if (!keys.includes(event.key)) return;
+            const target = event.target;
+            if (
+              target.tagName === "INPUT" ||
+              target.tagName === "TEXTAREA" ||
+              target.tagName === "SELECT"
+            )
+              return;
+            const items = Array.from(
+              group.querySelectorAll(
+                'a,button,summary,[role="radio"],[tabindex="0"]',
+              ),
+            ).filter(
+              (el) =>
+                !el.hasAttribute("disabled") &&
+                el.getAttribute("tabindex") !== "-1",
+            );
+            const index = items.indexOf(target);
+            if (index < 0) return;
+            let nextIndex = index;
+            if (event.key === "ArrowRight" || event.key === "ArrowDown")
+              nextIndex = index + 1;
+            if (event.key === "ArrowLeft" || event.key === "ArrowUp")
+              nextIndex = index - 1;
+            if (nextIndex !== index && items[nextIndex]) {
+              event.preventDefault();
+              items[nextIndex].focus();
+            }
+          });
+        });
+      }
+
+      enableArrowGroups();
     </script>
   </body>
 </html>
